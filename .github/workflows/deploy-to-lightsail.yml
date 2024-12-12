@@ -7,9 +7,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./laravel-word-search
 
     steps:
     - uses: actions/checkout@v3
