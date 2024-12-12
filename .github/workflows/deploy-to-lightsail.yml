@@ -3,8 +3,6 @@ name: Deploy Laravel to Bitnami Lightsail
 on:
   push:
     branches: [ main ]
-    paths:
-      - '**'
 
 jobs:
   deploy:
