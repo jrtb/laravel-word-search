@@ -4,28 +4,34 @@
 
 # Laravel Word Search Application
 
-This is a Laravel-based web application currently in its initial development phase. The application is built using Laravel's latest version and includes modern frontend tooling.
+A specialized web application for searching and analyzing words based on patterns and frequency of usage. Built with Laravel and modern frontend tooling.
 
-## Current Features
+## Features
 
-- Basic Laravel installation with a "Hello World" homepage
-- Modern frontend setup with Tailwind CSS and Vite
-- Default Laravel authentication scaffolding
-- Database migrations for users, cache, and jobs tables
+- **Pattern Search**: Search through two specialized word lists:
+  - **Omnigrams List**: Contains words that are 8+ letters long, contain exactly 8 unique letters, and include the letter 'S'
+  - **Word-Checker Dictionary**: Contains words that are 5+ letters long, contain the letter 'S', and have a maximum of 8 unique letters
+
+- **Frequency Search**: Search for words based on their frequency of usage in language
+  - Default threshold set to 0.0000009
+  - Returns up to 200 matching words
+  - Shows total count of matches found
 
 ## Technical Stack
 
-- Laravel (latest version)
+- Laravel 11
 - Tailwind CSS for styling
 - Vite for asset bundling
-- MySQL/PostgreSQL ready (database configurable)
+- AWS S3 for word list storage
+- MySQL/PostgreSQL for database
 
 ## Requirements
 
-- PHP >= 8.1
+- PHP >= 8.2
 - Composer
 - Node.js & NPM
 - Database (MySQL, PostgreSQL, etc.)
+- AWS S3 bucket access
 
 ## Installation
 
@@ -49,12 +55,15 @@ npm install
 cp .env.example .env
 ```
 
-5. Generate application key:
+5. Configure your environment variables:
+   - Database credentials
+   - AWS credentials (S3 bucket access)
+   - Application key
+
+6. Generate application key:
 ```bash
 php artisan key:generate
 ```
-
-6. Configure your database in the `.env` file
 
 7. Run migrations:
 ```bash
@@ -71,9 +80,19 @@ php artisan serve
 npm run dev
 ```
 
-## Development Status
+## Required S3 Assets
 
-This application is currently in its initial development phase. The basic Laravel structure is in place, and custom features are planned for future development.
+The application expects the following files to be present in your S3 bucket:
+- `assets/list1.txt`: Omnigrams word list
+- `assets/list2.txt`: Word-checker dictionary
+- `assets/processed_frequencies.csv`: Word frequency data
+
+## Deployment
+
+The application includes GitHub Actions workflow for automated deployment to AWS Lightsail. Configure the following secrets in your GitHub repository:
+- `LIGHTSAIL_AWS_ACCESS_KEY_ID`
+- `LIGHTSAIL_AWS_SECRET_ACCESS_KEY`
+- `LIGHTSAIL_SSH_PRIVATE_KEY`
 
 ## License
 
