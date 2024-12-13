@@ -1,0 +1,103 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Word Search Longest Word API",
+        "description": "API for tracking the longest word found by each player",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost",
+            "description": "Local development server"
+        }
+    ],
+    "paths": {
+        "/api/longest-word": {
+            "post": {
+                "tags": ["Longest Word"],
+                "summary": "Submit a new word",
+                "description": "Attempts to store a word if it's longer than the current longest word for the session",
+                "operationId": "storeLongestWord",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": ["word"],
+                                "properties": {
+                                    "word": {
+                                        "type": "string",
+                                        "example": "example"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Word submission result",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "is_longest": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "submitted_word": {
+                                            "type": "string",
+                                            "example": "example"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            },
+            "get": {
+                "tags": ["Longest Word"],
+                "summary": "Get current longest word",
+                "description": "Retrieves the longest word stored for the current session",
+                "operationId": "getLongestWord",
+                "responses": {
+                    "200": {
+                        "description": "Current longest word information",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "longest_word": {
+                                            "type": "string",
+                                            "example": "example",
+                                            "nullable": true
+                                        },
+                                        "length": {
+                                            "type": "integer",
+                                            "example": 7
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+} 

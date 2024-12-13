@@ -1,0 +1,127 @@
+{
+    "info": {
+        "name": "Word Search API",
+        "description": "Collection for the Word Search Longest Word API v1. Each player's words are tracked independently using session-based identification.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Longest Word",
+            "description": "Endpoints for managing longest word records. Each player maintains their own longest word record through session tracking. Rate limited to 60 requests per minute per IP.",
+            "item": [
+                {
+                    "name": "Submit Word",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"word\": \"extraordinary\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/longest-word",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "longest-word"]
+                        },
+                        "description": "Submit a new word. If it's longer than the player's current longest word, it will be stored. Each player's words are tracked independently through their session. Rate limited to 60 requests per minute per IP."
+                    },
+                    "response": [
+                        {
+                            "name": "Success Response",
+                            "originalRequest": {
+                                "method": "POST",
+                                "header": [],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n    \"word\": \"extraordinary\"\n}"
+                                },
+                                "url": "{{base_url}}/api/v1/longest-word"
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                },
+                                {
+                                    "key": "X-RateLimit-Limit",
+                                    "value": "60"
+                                },
+                                {
+                                    "key": "X-RateLimit-Remaining",
+                                    "value": "59"
+                                }
+                            ],
+                            "body": "{\n    \"success\": true,\n    \"is_longest\": true,\n    \"submitted_word\": \"extraordinary\"\n}"
+                        }
+                    ]
+                },
+                {
+                    "name": "Get Longest Word",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/v1/longest-word",
+                            "host": ["{{base_url}}"],
+                            "path": ["api", "v1", "longest-word"]
+                        },
+                        "description": "Get the current longest word for the player's session. Returns null and length 0 if no words have been submitted yet. Rate limited to 60 requests per minute per IP."
+                    },
+                    "response": [
+                        {
+                            "name": "Success Response",
+                            "originalRequest": {
+                                "method": "GET",
+                                "header": [],
+                                "url": "{{base_url}}/api/v1/longest-word"
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "_postman_previewlanguage": "json",
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                },
+                                {
+                                    "key": "X-RateLimit-Limit",
+                                    "value": "60"
+                                },
+                                {
+                                    "key": "X-RateLimit-Remaining",
+                                    "value": "59"
+                                }
+                            ],
+                            "body": "{\n    \"success\": true,\n    \"longest_word\": \"extraordinary\",\n    \"length\": 13\n}"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:8000",
+            "type": "string",
+            "description": "The base URL for the API (default: http://localhost:8000)"
+        }
+    ]
+} 
