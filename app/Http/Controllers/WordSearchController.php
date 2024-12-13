@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class WordSearchController extends Controller
 {
@@ -42,8 +43,16 @@ class WordSearchController extends Controller
             }
 
             try {
-                $list1Content = $s3->get($list1Path);
-                $list2Content = $s3->get($list2Path);
+                // Get word lists from cache or S3
+                $list1Words = Cache::remember('list1_words', 86400, function () use ($s3, $list1Path) {
+                    $list1Content = $s3->get($list1Path);
+                    return array_filter(explode("\n", $list1Content), 'trim');
+                });
+
+                $list2Words = Cache::remember('list2_words', 86400, function () use ($s3, $list2Path) {
+                    $list2Content = $s3->get($list2Path);
+                    return array_filter(explode("\n", $list2Content), 'trim');
+                });
             } catch (\Exception $e) {
                 Log::error('Failed to read word lists: ' . $e->getMessage());
                 return response()->json([
@@ -51,10 +60,6 @@ class WordSearchController extends Controller
                     'error' => 'Failed to read word lists'
                 ]);
             }
-
-            // Convert content to arrays and clean up any empty lines
-            $list1Words = array_filter(explode("\n", $list1Content), 'trim');
-            $list2Words = array_filter(explode("\n", $list2Content), 'trim');
 
             if ($list === 'omnigrams' || $list === 'both') {
                 $results['omnigrams'] = array_values(array_filter($list1Words, function($word) use ($query) {

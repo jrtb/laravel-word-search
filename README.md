@@ -87,6 +87,35 @@ The application expects the following files to be present in your S3 bucket:
 - `assets/list2.txt`: Word-checker dictionary
 - `assets/processed_frequencies.csv`: Word frequency data
 
+## Caching
+
+The application uses Laravel's file cache driver to improve performance when loading word lists. The cache configuration is as follows:
+
+- Word lists are cached for 24 hours
+- Cache files are stored in `storage/framework/cache/data`
+- Cache keys used:
+  - `list1_words`: For the Omnigrams list
+  - `list2_words`: For the Word-checker dictionary
+
+### Clearing the Cache
+
+You may need to clear the cache in the following situations:
+- After updating the word lists in S3
+- If you encounter stale or incorrect data
+- During troubleshooting
+
+To clear the cache, run one of these commands:
+
+```bash
+# Clear all application cache
+php artisan cache:clear
+
+# Clear specific cache keys
+php artisan tinker
+>>> Cache::forget('list1_words');
+>>> Cache::forget('list2_words');
+```
+
 ## Deployment
 
 The application includes GitHub Actions workflow for automated deployment to AWS Lightsail. Configure the following secrets in your GitHub repository:
