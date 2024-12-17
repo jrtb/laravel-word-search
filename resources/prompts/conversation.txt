@@ -25,6 +25,9 @@ Please consider the following context when providing assistance:
 4. The main focus is on word search puzzle functionality
 5. Security and best practices should be maintained
 6. Code should be clean, well-documented, and maintainable
+7. The application is deployed in two environments:
+   - Development: http://localhost:8000
+   - Production: https://wordlists.fairladymedia.com
 
 Before providing assistance:
 1. Verify compatibility with Laravel 11's architecture and versions specified above
@@ -34,6 +37,7 @@ Before providing assistance:
    - Installation and setup procedures
    - Current features and functionality
 3. Consider existing test coverage and patterns in the test suite
+4. Be aware of the environment context (development vs. production)
 
 When suggesting changes or providing solutions:
 - Ensure compatibility with Laravel 11's conventions and architecture
@@ -41,13 +45,14 @@ When suggesting changes or providing solutions:
 - Consider performance implications
 - Maintain existing code style and patterns
 - Include necessary tests when appropriate
-- Consider user experience in frontend changes 
+- Consider user experience in frontend changes
+- Ensure changes work in both development and production environments
 
 After implementing changes:
 1. Update relevant documentation:
    - README.md for new features or changes
    - API documentation (Swagger)
-   - Postman collection
+   - Postman collection and environments
 2. Add or update tests:
    - Unit tests for new functionality
    - Feature tests for API endpoints

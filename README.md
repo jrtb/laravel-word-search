@@ -130,20 +130,22 @@ The API documentation is available through Swagger UI, which provides an interac
 #### Postman Collection
 A Postman collection is available for testing the API endpoints in Postman.
 
-1. Import the collection:
+1. Import the collection and environments:
    - Open Postman
    - Click "Import" in the top left
-   - Select the file: `storage/postman/Word_Search_API.postman_collection.json`
+   - Select the files:
+     - `storage/postman/Word_Search_API.postman_collection.json`
+     - `storage/postman/Word_Search_API.postman_environment.json`
 
-2. Configure the environment:
-   - Create a new environment in Postman
-   - Add a variable named `base_url`
-   - Set its value to your API base URL (default: `http://localhost:8000`)
+2. Two environments are pre-configured:
+   - Development: `http://localhost:8000`
+   - Production: `https://wordlists.fairladymedia.com`
 
 3. Using the collection:
    - All endpoints are pre-configured with appropriate headers
    - Request bodies are pre-filled with example data
-   - Environment variables are used for easy switching between environments
+   - Switch environments using the dropdown in the top-right corner of Postman
+   - Environment variables are automatically applied to requests
 
 ## Technical Stack
 
