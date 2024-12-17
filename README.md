@@ -133,18 +133,19 @@ A Postman collection is available for testing the API endpoints in Postman.
 1. Import the collection and environments:
    - Open Postman
    - Click "Import" in the top left
-   - Select the files:
-     - `storage/postman/Word_Search_API.postman_collection.json`
-     - `storage/postman/Word_Search_API.postman_environment.json`
+   - Select these files:
+     - Collection: `storage/postman/Word_Search_API.postman_collection.json`
+     - Development Environment: `storage/postman/Word_Search_API.postman_environment.json`
+     - Production Environment: `storage/postman/Word_Search_API.production.postman_environment.json`
 
-2. Two environments are pre-configured:
+2. The environments are pre-configured with the following base URLs:
    - Development: `http://localhost:8000`
    - Production: `https://wordlists.fairladymedia.com`
 
 3. Using the collection:
    - All endpoints are pre-configured with appropriate headers
    - Request bodies are pre-filled with example data
-   - Switch environments using the dropdown in the top-right corner of Postman
+   - Switch environments using the environment dropdown in the top-right corner of Postman
    - Environment variables are automatically applied to requests
 
 ## Technical Stack
@@ -291,10 +292,40 @@ php artisan tinker
 
 ## Deployment
 
-The application includes GitHub Actions workflow for automated deployment to AWS Lightsail. Configure the following secrets in your GitHub repository:
-- `LIGHTSAIL_AWS_ACCESS_KEY_ID`
-- `LIGHTSAIL_AWS_SECRET_ACCESS_KEY`
-- `LIGHTSAIL_SSH_PRIVATE_KEY`
+### AWS Lightsail with Bitnami
+
+If deploying to AWS Lightsail using Bitnami's Laravel stack:
+
+1. Application Path:
+   - Root Directory: `/home/bitnami/stack/apache2/htdocs/laravel-word-search`
+   - Web Root: `/home/bitnami/stack/apache2/htdocs/laravel-word-search/public`
+
+2. File Permissions:
+   ```bash
+   # Navigate to application directory
+   cd /home/bitnami/stack/apache2/htdocs/laravel-word-search
+
+   # Set proper ownership for Bitnami environment
+   sudo chown -R daemon:daemon storage/
+   sudo chmod -R 775 storage/
+   
+   # Ensure cache directory has correct permissions
+   sudo mkdir -p storage/framework/cache/data
+   sudo chown -R daemon:daemon storage/framework/cache/
+   sudo chmod -R 775 storage/framework/cache/
+   ```
+
+3. Cache Configuration:
+   - Ensure `.env` has `CACHE_DRIVER=file`
+   - Verify storage/framework/cache/data directory exists and is writable
+   - Clear cache after deployment: `php artisan cache:clear`
+
+4. Bitnami Service Restart (if needed):
+   ```bash
+   sudo /opt/bitnami/ctlscript.sh restart apache
+   ```
+
+Note: Bitnami uses `daemon` as the web server user instead of the traditional `www-data`.
 
 ## License
 

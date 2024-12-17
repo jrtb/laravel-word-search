@@ -28,6 +28,11 @@ Please consider the following context when providing assistance:
 7. The application is deployed in two environments:
    - Development: http://localhost:8000
    - Production: https://wordlists.fairladymedia.com
+     - Hosted on AWS Lightsail
+     - Uses Bitnami Laravel stack
+     - Web server runs as 'daemon' user
+     - Application root: /home/bitnami/stack/apache2/htdocs/laravel-word-search
+     - Requires specific Bitnami-compatible file permissions
 
 Before providing assistance:
 1. Verify compatibility with Laravel 11's architecture and versions specified above
