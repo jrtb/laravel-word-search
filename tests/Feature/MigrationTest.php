@@ -28,7 +28,7 @@ class MigrationTest extends TestCase
     public function test_session_id_column_is_nullable(): void
     {
         $columnType = Schema::getColumnType('longest_words', 'session_id');
-        $this->assertEquals('string', $columnType);
+        $this->assertEquals('varchar', $columnType);
 
         // Test nullable by creating record without session_id
         DB::table('longest_words')->insert([

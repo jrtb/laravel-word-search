@@ -295,7 +295,9 @@ Laravel 11 introduces a simplified application structure:
 - `bootstrap/app.php`: Contains core application configuration including:
   - Service provider registration
   - Middleware groups (web and api)
-  - Route configurations
+  - Route configurations:
+    - API routes loaded from routes/api.php for better organization of versioned endpoints
+    - Web routes loaded from routes/web.php for web interface endpoints
   - Exception handling
 - `app/Providers/RateLimitingServiceProvider.php`: Handles API rate limiting configuration
   - Configures rate limits for API endpoints (60 requests per minute per IP)

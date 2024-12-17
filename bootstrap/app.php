@@ -33,13 +33,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         Route::middleware('api')
             ->prefix('api')
-            ->group(function () {
-                Route::prefix('v1')->group(function () {
-                    Route::post('/longest-word', [\App\Http\Controllers\LongestWordController::class, 'store']);
-                    Route::get('/longest-word', [\App\Http\Controllers\LongestWordController::class, 'show']);
-                    Route::get('/longest-word/top', [\App\Http\Controllers\LongestWordController::class, 'top']);
-                });
-            });
+            ->group(base_path('routes/api.php'));
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // API exception handling

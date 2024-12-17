@@ -16,7 +16,9 @@ Please consider the following context when providing assistance:
    - No HTTP/Console Kernel.php files - all middleware and exception handling is in bootstrap/app.php
    - Simplified application bootstrapping using fluent configuration
    - Middleware groups configured using ->withMiddleware() in bootstrap/app.php
-   - Route registration using ->withRouting() in bootstrap/app.php
+   - Route registration using ->withRouting() in bootstrap/app.php, which loads:
+     - API routes from routes/api.php for better organization of versioned endpoints
+     - Web routes from routes/web.php for web interface endpoints
    - Service providers registered using ->withProviders() for specific functionality
    - Simplified directory structure with removal of traditional bootstrap files
 
