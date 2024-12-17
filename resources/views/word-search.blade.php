@@ -4,11 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Word Lists Search</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Word Lists Search</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50">
+    <form id="csrf-form">
+        @csrf
+    </form>
     <div class="container mx-auto px-4 py-8 max-w-4xl">
         <h1 class="text-3xl font-bold mb-6">Word Lists Search</h1>
 
@@ -86,8 +89,23 @@
             </div>
         </div>
 
+        <!-- Top 10 Longest Words Section -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">Top 10 Longest Words</h2>
+            <div id="topWords" class="space-y-4">
+                <div class="animate-pulse">
+                    <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div class="space-y-3 mt-4">
+                        <div class="h-4 bg-gray-200 rounded"></div>
+                        <div class="h-4 bg-gray-200 rounded"></div>
+                        <div class="h-4 bg-gray-200 rounded"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Results Section -->
-        <div id="results" class="bg-white rounded-lg shadow p-6">
+        <div id="results" class="bg-white rounded-lg shadow p-6 hidden">
             <!-- Results will be displayed here -->
         </div>
     </div>
@@ -100,33 +118,96 @@
         const resultsDiv = document.getElementById('results');
         let searchTimeout;
 
+        // Get CSRF token from the meta tag
+        function getCsrfToken() {
+            const token = document.querySelector('meta[name="csrf-token"]')?.content;
+            if (!token) {
+                console.error('CSRF token not found');
+                return null;
+            }
+            console.log('CSRF Token:', token); // Debug log
+            return token;
+        }
+
+        // Add CSRF token to all fetch requests
+        function fetchWithCsrf(url, options = {}) {
+            const token = getCsrfToken();
+            if (!token) {
+                return Promise.reject(new Error('CSRF token not found'));
+            }
+
+            const defaultOptions = {
+                method: options.method || 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': token,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                credentials: 'same-origin'
+            };
+
+            // Merge options, ensuring headers are properly combined
+            const mergedOptions = {
+                ...defaultOptions,
+                ...options,
+                headers: {
+                    ...defaultOptions.headers,
+                    ...(options.headers || {})
+                }
+            };
+
+            // Debug log
+            console.log('Fetch request:', {
+                url,
+                options: mergedOptions
+            });
+
+            return fetch(url, mergedOptions)
+                .then(async response => {
+                    if (!response.ok) {
+                        const text = await response.text();
+                        console.error('Response error:', {
+                            status: response.status,
+                            statusText: response.statusText,
+                            headers: Object.fromEntries(response.headers.entries()),
+                            body: text
+                        });
+                        try {
+                            const json = JSON.parse(text);
+                            throw new Error(`${json.message || 'Unknown error'} (Status: ${response.status})`);
+                        } catch (e) {
+                            throw new Error(`HTTP error! status: ${response.status}, response: ${text}`);
+                        }
+                    }
+                    return response.json();
+                });
+        }
+
         function performSearch() {
             const query = searchInput.value;
             const list = document.querySelector('input[name="list"]:checked').value;
 
             if (query.length < 2) {
+                resultsDiv.classList.add('hidden');
                 resultsDiv.innerHTML = '';
                 return;
             }
 
-            fetch('/search', {
+            resultsDiv.classList.remove('hidden');
+            resultsDiv.innerHTML = '<div class="text-gray-500">Searching...</div>';
+            
+            fetchWithCsrf('/search', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
                 body: JSON.stringify({ query, list })
             })
-            .then(response => response.json())
             .then(data => {
                 if (!data) {
-                    resultsDiv.innerHTML = '<div class="text-red-600">Error: No data received from API</div>';
-                    return;
+                    throw new Error('No data received from API');
                 }
                 
                 if (!data.success) {
-                    resultsDiv.innerHTML = `<div class="text-red-600">Error: ${data.error || 'Unknown error occurred'}</div>`;
-                    return;
+                    throw new Error(data.error || 'Unknown error occurred');
                 }
                 
                 let html = '';
@@ -150,10 +231,17 @@
                     </div>`;
                 }
                 
-                resultsDiv.innerHTML = html || 'No matches found';
+                if (html) {
+                    resultsDiv.classList.remove('hidden');
+                    resultsDiv.innerHTML = html;
+                } else {
+                    resultsDiv.classList.remove('hidden');
+                    resultsDiv.innerHTML = 'No matches found';
+                }
             })
             .catch(error => {
                 console.error('Search error:', error);
+                resultsDiv.classList.remove('hidden');
                 resultsDiv.innerHTML = `<div class="text-red-600">Error: ${error.message}</div>`;
             });
         }
@@ -162,30 +250,26 @@
             const frequency = parseFloat(frequencyInput.value);
             
             if (isNaN(frequency) || frequency < 0) {
+                resultsDiv.classList.remove('hidden');
                 resultsDiv.innerHTML = '<div class="text-red-600">Please enter a valid frequency (must be a positive number)</div>';
                 return;
             }
 
-            // Show loading indicator and disable button
             loadingIndicator.classList.remove('hidden');
             searchFrequencyBtn.disabled = true;
+            resultsDiv.classList.add('hidden');
             resultsDiv.innerHTML = '';
 
-            fetch('/search-frequency', {
+            fetchWithCsrf('/search-frequency', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
                 body: JSON.stringify({ frequency })
             })
-            .then(response => response.json())
             .then(data => {
-                // Hide loading indicator and enable button
                 loadingIndicator.classList.add('hidden');
                 searchFrequencyBtn.disabled = false;
 
                 if (!data.success) {
+                    resultsDiv.classList.remove('hidden');
                     resultsDiv.innerHTML = `<div class="text-red-600">Error: ${data.error || 'Unknown error occurred'}</div>`;
                     return;
                 }
@@ -194,25 +278,80 @@
                     <h3 class="font-medium mb-2">Words with frequency ≥ ${frequency}:</h3>
                     <p class="mb-4">At least ${data.total_count} matching words found</p>`;
                 
-                if (data.words.length > 0) {
+                if (data.words && data.words.length > 0) {
                     html += `<ul class="list-disc pl-5 grid grid-cols-4 gap-2">
                         ${data.words.map(word => `<li>${word}</li>`).join('')}
                     </ul>`;
+                } else {
+                    html += '<p>No words found matching the frequency criteria.</p>';
                 }
                 
                 html += '</div>';
+                resultsDiv.classList.remove('hidden');
                 resultsDiv.innerHTML = html;
             })
             .catch(error => {
-                // Hide loading indicator and enable button
                 loadingIndicator.classList.add('hidden');
                 searchFrequencyBtn.disabled = false;
 
                 console.error('Frequency search error:', error);
+                resultsDiv.classList.remove('hidden');
                 resultsDiv.innerHTML = `<div class="text-red-600">Error: ${error.message}</div>`;
             });
         }
 
+        // Function to fetch and display top 10 longest words
+        function fetchTopWords() {
+            fetch('/api/v1/longest-word/top')
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        throw new Error(data.error || 'Failed to fetch top words');
+                    }
+
+                    const topWordsDiv = document.getElementById('topWords');
+                    if (data.words.length === 0) {
+                        topWordsDiv.innerHTML = '<p class="text-gray-500">No words submitted yet.</p>';
+                        return;
+                    }
+
+                    const html = `
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full table-auto">
+                                <thead>
+                                    <tr class="bg-gray-50">
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Word</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Length</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Player ID</th>
+                                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                    ${data.words.map((word, index) => `
+                                        <tr>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">#${index + 1}</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-900">${word.word}</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">${word.length} letters</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm font-mono text-gray-500">${word.player_id}</td>
+                                            <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">${new Date(word.submitted_at).toLocaleDateString()}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                    topWordsDiv.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error fetching top words:', error);
+                    document.getElementById('topWords').innerHTML = `
+                        <div class="text-red-600">Error loading top words: ${error.message}</div>
+                    `;
+                });
+        }
+
+        // Event listeners
         searchInput.addEventListener('input', () => {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(performSearch, 300);
@@ -223,6 +362,9 @@
         });
 
         searchFrequencyBtn.addEventListener('click', performFrequencySearch);
+
+        // Initial top words fetch
+        fetchTopWords();
     </script>
 </body>
 </html>

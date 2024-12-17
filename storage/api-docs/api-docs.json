@@ -29,7 +29,7 @@
                     "Longest Word"
                 ],
                 "summary": "Get current longest word",
-                "description": "Retrieves the longest word stored for the current session. Each player sees only their own longest word.",
+                "description": "Retrieves the longest word stored for the current session. Each player sees only their own longest word and receives their unique player_id.",
                 "operationId": "getLongestWord",
                 "responses": {
                     "200": {
@@ -43,13 +43,20 @@
                                             "example": true
                                         },
                                         "longest_word": {
+                                            "description": "The player's longest word, null if no words submitted",
                                             "type": "string",
                                             "example": "extraordinary",
                                             "nullable": true
                                         },
                                         "length": {
+                                            "description": "Length of the longest word, 0 if no words submitted",
                                             "type": "integer",
                                             "example": 13
+                                        },
+                                        "player_id": {
+                                            "description": "Unique identifier for the player (first 8 characters of session ID)",
+                                            "type": "string",
+                                            "example": "8f7d9c2e"
                                         }
                                     },
                                     "type": "object"
@@ -58,23 +65,7 @@
                         }
                     },
                     "429": {
-                        "description": "Too many requests - rate limit exceeded",
-                        "headers": {
-                            "X-RateLimit-Limit": {
-                                "description": "Number of requests allowed per minute",
-                                "schema": {
-                                    "type": "integer",
-                                    "example": 60
-                                }
-                            },
-                            "X-RateLimit-Remaining": {
-                                "description": "Number of requests remaining in current time window",
-                                "schema": {
-                                    "type": "integer",
-                                    "example": 59
-                                }
-                            }
-                        }
+                        "description": "Too many requests - rate limit exceeded (60 per minute)"
                     }
                 }
             },
@@ -83,7 +74,7 @@
                     "Longest Word"
                 ],
                 "summary": "Submit a new word",
-                "description": "Attempts to store a word if it's longer than the current longest word for the session. Each player maintains their own longest word record.",
+                "description": "Attempts to store a word if it's longer than the current longest word for the session. Each player maintains their own longest word record, identified by their session.",
                 "operationId": "storeLongestWord",
                 "requestBody": {
                     "required": true,
@@ -117,10 +108,12 @@
                                             "example": true
                                         },
                                         "is_longest": {
+                                            "description": "Whether this word became the player's new longest word",
                                             "type": "boolean",
                                             "example": true
                                         },
                                         "submitted_word": {
+                                            "description": "The word that was submitted",
                                             "type": "string",
                                             "example": "extraordinary"
                                         }
@@ -134,23 +127,67 @@
                         "description": "Validation error - empty or invalid word"
                     },
                     "429": {
-                        "description": "Too many requests - rate limit exceeded",
-                        "headers": {
-                            "X-RateLimit-Limit": {
-                                "description": "Number of requests allowed per minute",
+                        "description": "Too many requests - rate limit exceeded (60 per minute)"
+                    }
+                }
+            }
+        },
+        "/api/v1/longest-word/top": {
+            "get": {
+                "tags": [
+                    "Longest Word"
+                ],
+                "summary": "Get top 10 longest words",
+                "description": "Retrieves the top 10 longest words submitted by all players, ordered by word length. Each word includes the submitter's player_id for identification.",
+                "operationId": "getTopLongestWords",
+                "responses": {
+                    "200": {
+                        "description": "Top 10 longest words",
+                        "content": {
+                            "application/json": {
                                 "schema": {
-                                    "type": "integer",
-                                    "example": 60
-                                }
-                            },
-                            "X-RateLimit-Remaining": {
-                                "description": "Number of requests remaining in current time window",
-                                "schema": {
-                                    "type": "integer",
-                                    "example": 59
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "words": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "word": {
+                                                        "description": "The submitted word",
+                                                        "type": "string",
+                                                        "example": "supercalifragilistic"
+                                                    },
+                                                    "player_id": {
+                                                        "description": "Unique identifier for the player who submitted the word",
+                                                        "type": "string",
+                                                        "example": "8f7d9c2e"
+                                                    },
+                                                    "length": {
+                                                        "description": "Length of the word",
+                                                        "type": "integer",
+                                                        "example": 20
+                                                    },
+                                                    "submitted_at": {
+                                                        "description": "When the word was submitted",
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "example": "2024-03-15T10:30:00Z"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
+                    },
+                    "429": {
+                        "description": "Too many requests - rate limit exceeded (60 per minute)"
                     }
                 }
             }
@@ -366,7 +403,7 @@
     "tags": [
         {
             "name": "Longest Word",
-            "description": "External API endpoints for tracking longest words found by players"
+            "description": "External API endpoints for tracking longest words found by players. Each player is identified by their session, with a shortened player_id for display."
         },
         {
             "name": "Word Search",

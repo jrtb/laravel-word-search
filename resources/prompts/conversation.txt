@@ -1,6 +1,6 @@
 # Conversation Prompt
 
-You are assisting with a Laravel Word Search application. This application allows users to create, solve, and share word search puzzles.
+You are assisting with a Laravel Word Search application. This application allows users to create, solve, and share word search puzzles, as well as track their longest discovered words.
 
 Please consider the following context when providing assistance:
 
@@ -17,22 +17,72 @@ Please consider the following context when providing assistance:
    - Simplified application bootstrapping using fluent configuration
    - Middleware groups configured using ->withMiddleware() in bootstrap/app.php
    - Route registration using ->withRouting() in bootstrap/app.php
-   - Service providers registered using ->withProviders() for specific functionality (e.g., rate limiting)
-   - Rate limiting configured through dedicated service provider
+   - Service providers registered using ->withProviders() for specific functionality
    - Simplified directory structure with removal of traditional bootstrap files
 
-3. The application uses Tailwind CSS for styling
-4. The main focus is on word search puzzle functionality
-5. Security and best practices should be maintained
-6. Code should be clean, well-documented, and maintainable
-7. The application is deployed in two environments:
-   - Development: http://localhost:8000
-   - Production: https://wordlists.fairladymedia.com
-     - Hosted on AWS Lightsail
-     - Uses Bitnami Laravel stack
-     - Web server runs as 'daemon' user
-     - Application root: /home/bitnami/stack/apache2/htdocs/laravel-word-search
-     - Requires specific Bitnami-compatible file permissions
+3. Key Features:
+   - Word search puzzle functionality
+   - Pattern-based word searching
+   - Frequency-based word analysis
+   - Longest word tracking system:
+     - Session-based player identification using PlayerIdentityService
+     - Request fingerprinting for player recognition
+     - Individual longest word records per player
+     - Top 10 longest words leaderboard
+     - Cross-session player identity maintenance
+
+4. Database Structure:
+   - Uses migrations for schema management
+   - Key tables include:
+     - longest_words: Tracks player word submissions
+       - session_id: Current session identifier
+       - player_id: Unique player identifier (generated via PlayerIdentityService)
+       - word: The submitted word
+       - timestamps: Created/updated tracking
+
+5. Player Identity System:
+   - PlayerIdentityService handles player identification
+   - Uses request fingerprinting to recognize returning players
+   - Maintains player identity across sessions
+   - Supports both test and production environments
+   - Follows Laravel's dependency injection patterns
+   - Configurable fingerprinting strategy
+
+6. Testing:
+   - Feature tests for all API endpoints
+   - Proper mocking of PlayerIdentityService
+   - Session handling in tests
+   - Database assertions
+   - Test isolation and independence
+
+7. The application uses Tailwind CSS for styling
+8. Security and best practices should be maintained
+9. Code should be clean, well-documented, and maintainable
+10. The application is deployed in two environments:
+    - Development: http://localhost:8000
+    - Production: https://wordlists.fairladymedia.com
+      - Hosted on AWS Lightsail
+      - Uses Bitnami Laravel stack
+      - Web server runs as 'daemon' user
+      - Application root: /home/bitnami/stack/apache2/htdocs/laravel-word-search
+      - Requires specific Bitnami-compatible file permissions
+
+11. Security and Error Handling:
+    - CSRF Protection:
+      - All web routes protected by CSRF tokens
+      - Token included in blade templates via meta tag
+      - JavaScript requests include X-CSRF-TOKEN header
+      - Enhanced error handling for token mismatches
+    - Client-Side Error Handling:
+      - Comprehensive error logging
+      - User-friendly error messages
+      - Loading states and indicators
+      - Fallback content for failed requests
+    - Server-Side Error Handling:
+      - Detailed error responses
+      - Proper status codes
+      - Consistent error format
+      - Environment-specific error detail levels
 
 Before providing assistance:
 1. Verify compatibility with Laravel 11's architecture and versions specified above
@@ -70,3 +120,11 @@ For major changes:
 - Highlight any configuration changes needed
 - Include any necessary migration steps
 - Ensure changes align with Laravel 11's architectural patterns
+
+When handling errors:
+- Provide clear, user-friendly error messages
+- Log detailed error information for debugging
+- Maintain security by not exposing sensitive information
+- Consider both development and production environments
+- Follow Laravel 11's error handling patterns
+- Implement proper loading states and fallbacks

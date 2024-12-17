@@ -5,50 +5,63 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\LongestWordController;
-use App\Providers\RateLimitingServiceProvider;
 
 return Application::configure(basePath: dirname(__DIR__))
-    ->withProviders([
-        RateLimitingServiceProvider::class,
-    ])
-    ->withRouting(function () {
-        require __DIR__.'/../routes/web.php';
-        
-        // API Routes with versioning
-        Route::prefix('api/v1')->middleware('api')->group(function () {
-            Route::middleware(['throttle:60,1', 'cache.headers:public;max_age=60;etag'])->group(function () {
-                Route::post('/longest-word', [LongestWordController::class, 'store']);
-                Route::get('/longest-word', [LongestWordController::class, 'show']);
-            });
-        });
-        
-        require __DIR__.'/../routes/console.php';
-    })
+    ->withProviders()
     ->withMiddleware(function (Middleware $middleware) {
+        // Core middleware aliases
         $middleware->alias([
-            'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
-            'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,
-        ]);
-        
-        $middleware->group('api', [
-            \Illuminate\Http\Middleware\HandleCors::class,
-            \Illuminate\Cookie\Middleware\EncryptCookies::class,
-            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
-            \Illuminate\Session\Middleware\StartSession::class,
-            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-            \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
+            'bindings' => \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            'cors' => \Illuminate\Http\Middleware\HandleCors::class,
         ]);
 
+        // Web middleware group
         $middleware->web([
             \Illuminate\Cookie\Middleware\EncryptCookies::class,
             \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
             \Illuminate\Session\Middleware\StartSession::class,
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
-            \Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class,
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
+            'bindings',
+        ]);
+
+        // API middleware group
+        $middleware->api([
+            'cors',
+            \Illuminate\Session\Middleware\StartSession::class,
+            'bindings',
+        ]);
+
+        // Global middleware
+        $middleware->use([
+            \Illuminate\Http\Middleware\TrustProxies::class,
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Session\Middleware\StartSession::class,
         ]);
     })
+    ->withRouting(function () {
+        // Web routes
+        Route::middleware('web')
+            ->group(base_path('routes/web.php'));
+
+        // API routes
+        Route::middleware('api')
+            ->prefix('api')
+            ->group(base_path('routes/api.php'));
+    })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
-    })->create();
+        // API exception handling
+        $exceptions->render(function (Request $request, \Throwable $e) {
+            if ($request->is('api/*')) {
+                return response()->json([
+                    'message' => $e->getMessage(),
+                    'code' => $e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface
+                        ? $e->getStatusCode()
+                        : 500
+                ], $e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface
+                    ? $e->getStatusCode()
+                    : 500);
+            }
+        });
+    })
+    ->create();
