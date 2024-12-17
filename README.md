@@ -300,11 +300,26 @@ If deploying to AWS Lightsail using Bitnami's Laravel stack:
    - Root Directory: `/home/bitnami/stack/apache2/htdocs/laravel-word-search`
    - Web Root: `/home/bitnami/stack/apache2/htdocs/laravel-word-search/public`
 
-2. File Permissions:
+2. Database Permissions (SQLite):
    ```bash
    # Navigate to application directory
    cd /home/bitnami/stack/apache2/htdocs/laravel-word-search
+   
+   # Create database directory if it doesn't exist
+   sudo mkdir -p database
+   
+   # Set proper ownership and permissions for database directory
+   sudo chown -R daemon:daemon database/
+   sudo chmod -R 775 database/
+   
+   # Ensure SQLite database file is writable
+   sudo touch database/database.sqlite
+   sudo chown daemon:daemon database/database.sqlite
+   sudo chmod 664 database/database.sqlite
+   ```
 
+3. Storage Permissions:
+   ```bash
    # Set proper ownership for Bitnami environment
    sudo chown -R daemon:daemon storage/
    sudo chmod -R 775 storage/
@@ -315,12 +330,30 @@ If deploying to AWS Lightsail using Bitnami's Laravel stack:
    sudo chmod -R 775 storage/framework/cache/
    ```
 
-3. Cache Configuration:
+4. Cache Configuration:
    - Ensure `.env` has `CACHE_DRIVER=file`
    - Verify storage/framework/cache/data directory exists and is writable
-   - Clear cache after deployment: `php artisan cache:clear`
+   - Clear cache after deployment:
+     ```bash
+     # Clear application cache as bitnami user
+     sudo -u daemon php artisan cache:clear
+     
+     # If needed, also clear config cache
+     sudo -u daemon php artisan config:clear
+     ```
 
-4. Bitnami Service Restart (if needed):
+5. Running Laravel Commands:
+   ```bash
+   # General format for running artisan commands in Bitnami
+   sudo -u daemon php artisan <command>
+   
+   # Examples:
+   sudo -u daemon php artisan migrate
+   sudo -u daemon php artisan config:clear
+   sudo -u daemon php artisan route:clear
+   ```
+
+6. Bitnami Service Restart (if needed):
    ```bash
    sudo /opt/bitnami/ctlscript.sh restart apache
    ```
