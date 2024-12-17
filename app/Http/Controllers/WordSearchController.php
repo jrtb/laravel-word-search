@@ -7,13 +7,68 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
 
+/**
+ * @OA\Tag(
+ *     name="Word Search",
+ *     description="Internal API endpoints for word searching functionality"
+ * )
+ */
 class WordSearchController extends Controller
 {
+    /**
+     * @OA\Get(
+     *     path="/",
+     *     summary="Display the word search interface",
+     *     tags={"Word Search"},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Word search view"
+     *     )
+     * )
+     */
     public function index()
     {
         return view('word-search');
     }
 
+    /**
+     * @OA\Post(
+     *     path="/search",
+     *     summary="Search for words based on pattern",
+     *     description="Search through specialized word lists based on a query pattern. Protected by CSRF token.",
+     *     tags={"Word Search"},
+     *     security={{"csrf":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"query", "list"},
+     *             @OA\Property(property="query", type="string", example="example", description="The search pattern"),
+     *             @OA\Property(property="list", type="string", enum={"omnigrams", "wordchecker", "both"}, example="both", description="Which list to search in")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Search results",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(
+     *                 property="results",
+     *                 type="object",
+     *                 @OA\Property(property="omnigrams", type="array", @OA\Items(type="string")),
+     *                 @OA\Property(property="wordchecker", type="array", @OA\Items(type="string"))
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="error", type="string")
+     *         )
+     *     )
+     * )
+     */
     public function search(Request $request)
     {
         try {
@@ -86,6 +141,39 @@ class WordSearchController extends Controller
         }
     }
 
+    /**
+     * @OA\Post(
+     *     path="/search-frequency",
+     *     summary="Search for words based on frequency",
+     *     description="Search for words that meet or exceed a specified frequency threshold. Protected by CSRF token.",
+     *     tags={"Word Search"},
+     *     security={{"csrf":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"frequency"},
+     *             @OA\Property(property="frequency", type="number", format="float", example=0.0000009, description="Minimum frequency threshold")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Search results",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="total_count", type="integer", example=150),
+     *             @OA\Property(property="words", type="array", @OA\Items(type="string"))
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Server error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="error", type="string")
+     *         )
+     *     )
+     * )
+     */
     public function searchFrequency(Request $request)
     {
         try {

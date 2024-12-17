@@ -1,36 +1,106 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "title": "Word Search Longest Word API",
-        "description": "API for tracking the longest word found by each player",
+        "title": "Laravel Word Search API",
+        "description": "API documentation for Laravel Word Search application, including both internal and external endpoints.",
+        "contact": {
+            "name": "API Support",
+            "email": "support@fairladymedia.com"
+        },
         "version": "1.0.0"
     },
     "servers": [
         {
-            "url": "http://localhost",
-            "description": "Local development server"
+            "url": "http://localhost:8000",
+            "description": "Local Development Server"
+        },
+        {
+            "url": "https://wordlists.fairladymedia.com",
+            "description": "Production Server"
+        },
+        {
+            "url": ""
         }
     ],
     "paths": {
-        "/api/longest-word": {
+        "/api/v1/longest-word": {
+            "get": {
+                "tags": [
+                    "Longest Word"
+                ],
+                "summary": "Get current longest word",
+                "description": "Retrieves the longest word stored for the current session. Each player sees only their own longest word.",
+                "operationId": "getLongestWord",
+                "responses": {
+                    "200": {
+                        "description": "Current longest word information",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "longest_word": {
+                                            "type": "string",
+                                            "example": "extraordinary",
+                                            "nullable": true
+                                        },
+                                        "length": {
+                                            "type": "integer",
+                                            "example": 13
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests - rate limit exceeded",
+                        "headers": {
+                            "X-RateLimit-Limit": {
+                                "description": "Number of requests allowed per minute",
+                                "schema": {
+                                    "type": "integer",
+                                    "example": 60
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "description": "Number of requests remaining in current time window",
+                                "schema": {
+                                    "type": "integer",
+                                    "example": 59
+                                }
+                            }
+                        }
+                    }
+                }
+            },
             "post": {
-                "tags": ["Longest Word"],
+                "tags": [
+                    "Longest Word"
+                ],
                 "summary": "Submit a new word",
-                "description": "Attempts to store a word if it's longer than the current longest word for the session",
+                "description": "Attempts to store a word if it's longer than the current longest word for the session. Each player maintains their own longest word record.",
                 "operationId": "storeLongestWord",
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
-                                "type": "object",
-                                "required": ["word"],
+                                "required": [
+                                    "word"
+                                ],
                                 "properties": {
                                     "word": {
+                                        "description": "The word to submit",
                                         "type": "string",
-                                        "example": "example"
+                                        "example": "extraordinary"
                                     }
-                                }
+                                },
+                                "type": "object"
                             }
                         }
                     }
@@ -41,7 +111,6 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "type": "object",
                                     "properties": {
                                         "success": {
                                             "type": "boolean",
@@ -53,51 +122,264 @@
                                         },
                                         "submitted_word": {
                                             "type": "string",
-                                            "example": "example"
+                                            "example": "extraordinary"
                                         }
-                                    }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
                     },
                     "422": {
-                        "description": "Validation error"
-                    }
-                }
-            },
-            "get": {
-                "tags": ["Longest Word"],
-                "summary": "Get current longest word",
-                "description": "Retrieves the longest word stored for the current session",
-                "operationId": "getLongestWord",
-                "responses": {
-                    "200": {
-                        "description": "Current longest word information",
-                        "content": {
-                            "application/json": {
+                        "description": "Validation error - empty or invalid word"
+                    },
+                    "429": {
+                        "description": "Too many requests - rate limit exceeded",
+                        "headers": {
+                            "X-RateLimit-Limit": {
+                                "description": "Number of requests allowed per minute",
                                 "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "longest_word": {
-                                            "type": "string",
-                                            "example": "example",
-                                            "nullable": true
-                                        },
-                                        "length": {
-                                            "type": "integer",
-                                            "example": 7
-                                        }
-                                    }
+                                    "type": "integer",
+                                    "example": 60
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "description": "Number of requests remaining in current time window",
+                                "schema": {
+                                    "type": "integer",
+                                    "example": 59
                                 }
                             }
                         }
                     }
                 }
             }
+        },
+        "/": {
+            "get": {
+                "tags": [
+                    "Word Search"
+                ],
+                "summary": "Display the word search interface",
+                "operationId": "59f0741d68535f9065795aab9930413a",
+                "responses": {
+                    "200": {
+                        "description": "Word search view"
+                    }
+                }
+            }
+        },
+        "/search": {
+            "post": {
+                "tags": [
+                    "Word Search"
+                ],
+                "summary": "Search for words based on pattern",
+                "description": "Search through specialized word lists based on a query pattern. Protected by CSRF token.",
+                "operationId": "8896c7f75118ec3ac626e94b58fcf295",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "query",
+                                    "list"
+                                ],
+                                "properties": {
+                                    "query": {
+                                        "description": "The search pattern",
+                                        "type": "string",
+                                        "example": "example"
+                                    },
+                                    "list": {
+                                        "description": "Which list to search in",
+                                        "type": "string",
+                                        "enum": [
+                                            "omnigrams",
+                                            "wordchecker",
+                                            "both"
+                                        ],
+                                        "example": "both"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Search results",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "results": {
+                                            "properties": {
+                                                "omnigrams": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "wordchecker": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "csrf": []
+                    }
+                ]
+            }
+        },
+        "/search-frequency": {
+            "post": {
+                "tags": [
+                    "Word Search"
+                ],
+                "summary": "Search for words based on frequency",
+                "description": "Search for words that meet or exceed a specified frequency threshold. Protected by CSRF token.",
+                "operationId": "08a95d20d9a10a056460690268b92cff",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "frequency"
+                                ],
+                                "properties": {
+                                    "frequency": {
+                                        "description": "Minimum frequency threshold",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 9.0e-7
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Search results",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "total_count": {
+                                            "type": "integer",
+                                            "example": 150
+                                        },
+                                        "words": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "csrf": []
+                    }
+                ]
+            }
         }
-    }
-} 
+    },
+    "components": {
+        "securitySchemes": {
+            "csrf": {
+                "type": "apiKey",
+                "description": "CSRF token required for internal API endpoints",
+                "name": "X-CSRF-TOKEN",
+                "in": "header"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Longest Word",
+            "description": "External API endpoints for tracking longest words found by players"
+        },
+        {
+            "name": "Word Search",
+            "description": "Internal API endpoints for word searching functionality"
+        }
+    ],
+    "externalDocs": {
+        "description": "Find more info in README",
+        "url": "https://github.com/yourusername/laravel-word-search"
+    },
+    "security": [
+        {
+            "csrf": []
+        }
+    ]
+}

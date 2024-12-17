@@ -26,6 +26,10 @@ jobs:
         sed -i "s|AWS_SECRET_ACCESS_KEY=|AWS_SECRET_ACCESS_KEY=${{ secrets.LIGHTSAIL_AWS_SECRET_ACCESS_KEY }}|" .env
         sed -i "s|AWS_DEFAULT_REGION=.*|AWS_DEFAULT_REGION=us-east-1|" .env
         sed -i "s|AWS_BUCKET=.*|AWS_BUCKET=sword.fairladymedia.com|" .env
+        
+        # Set Swagger environment variables for production
+        echo "L5_SWAGGER_GENERATE_ALWAYS=false" >> .env
+        echo "L5_SWAGGER_CONST_HOST=https://wordlists.fairladymedia.com" >> .env
       
     - name: Install Dependencies
       run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
@@ -92,6 +96,13 @@ jobs:
           sudo /opt/bitnami/php/bin/php artisan config:cache &&
           sudo /opt/bitnami/php/bin/php artisan route:cache &&
           sudo /opt/bitnami/php/bin/php artisan view:cache &&
+          
+          # Generate and cache Swagger documentation
+          sudo /opt/bitnami/php/bin/php artisan l5-swagger:generate &&
+          
+          # Set proper permissions for Swagger documentation
+          sudo chown -R daemon:daemon storage/api-docs &&
+          sudo chmod -R 775 storage/api-docs &&
           
           # Restart Apache
           sudo /opt/bitnami/ctlscript.sh restart apache'
