@@ -25,8 +25,11 @@ Please consider the following context when providing assistance:
    - Pattern-based word searching
    - Frequency-based word analysis
    - Longest word tracking system:
-     - Session-based player identification using PlayerIdentityService
-     - Request fingerprinting for player recognition
+     - Browser fingerprint-based player identification using PlayerIdentityService
+     - Consistent player recognition across sessions using:
+       - IP address
+       - User agent
+       - Accept-Language header
      - Individual longest word records per player
      - Top 10 longest words leaderboard
      - Cross-session player identity maintenance
@@ -35,22 +38,27 @@ Please consider the following context when providing assistance:
    - Uses migrations for schema management
    - Key tables include:
      - longest_words: Tracks player word submissions
-       - session_id: Current session identifier
-       - player_id: Unique player identifier (generated via PlayerIdentityService)
+       - session_id: Current session identifier (updated on each request)
+       - player_id: Unique player identifier (SHA-256 hash of browser fingerprint)
        - word: The submitted word
        - timestamps: Created/updated tracking
 
 5. Player Identity System:
    - PlayerIdentityService handles player identification
    - Uses request fingerprinting to recognize returning players
+   - Generates consistent SHA-256 hash from request attributes
    - Maintains player identity across sessions
    - Supports both test and production environments
    - Follows Laravel's dependency injection patterns
-   - Configurable fingerprinting strategy
+   - Includes comprehensive test coverage
+   - Handles edge cases like:
+     - Browser changes
+     - Session expiration
+     - Multiple tabs/windows
 
 6. Testing:
    - Feature tests for all API endpoints
-   - Proper mocking of PlayerIdentityService
+   - Dedicated fingerprint-based identity tests
    - Session handling in tests
    - Database assertions
    - Test isolation and independence

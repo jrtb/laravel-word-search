@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Http\Request;
+use App\Models\LongestWord;
 
 class PlayerIdentityService
 {
@@ -11,12 +12,20 @@ class PlayerIdentityService
      */
     public function generateFingerprint(Request $request): string
     {
-        return hash('sha256', implode('|', [
-            $request->ip(),
-            $request->userAgent(),
-            $request->header('Accept-Language', ''),
-            // Add more identifiers as needed
+        // Get raw values to ensure we're getting the actual request data
+        $ip = $request->server('REMOTE_ADDR');
+        $userAgent = $request->header('User-Agent');
+        $acceptLanguage = $request->header('Accept-Language');
+
+        // Create a unique string combining all identifiers
+        $identifierString = implode('|', array_filter([
+            $ip,
+            $userAgent,
+            $acceptLanguage,
         ]));
+
+        // Hash the identifier string
+        return hash('sha256', $identifierString);
     }
 
     /**
@@ -24,10 +33,21 @@ class PlayerIdentityService
      */
     public function findOrGeneratePlayerId(Request $request, ?string $existingPlayerId = null): string
     {
-        if ($existingPlayerId) {
+        // If we have an existing player ID, verify it's valid and return it
+        if ($existingPlayerId && LongestWord::where('player_id', $existingPlayerId)->exists()) {
             return $existingPlayerId;
         }
 
-        return $this->generateFingerprint($request);
+        // Generate fingerprint for the current request
+        $fingerprint = $this->generateFingerprint($request);
+
+        // Look for any existing player with this fingerprint
+        $existingWord = LongestWord::where('player_id', $fingerprint)->first();
+        if ($existingWord) {
+            return $fingerprint;
+        }
+
+        // If no existing player found, use the fingerprint as the new player ID
+        return $fingerprint;
     }
 } 

@@ -41,8 +41,14 @@ class LongestWordController extends Controller
             return $this->playerIdentityService->findOrGeneratePlayerId($request, $word->player_id);
         }
 
-        // Generate a new player ID
-        return $this->playerIdentityService->findOrGeneratePlayerId($request);
+        // No existing session found, generate a new player ID
+        $playerId = $this->playerIdentityService->findOrGeneratePlayerId($request);
+
+        // Store this association for future lookups
+        LongestWord::where('player_id', $playerId)
+            ->update(['session_id' => $sessionId]);
+
+        return $playerId;
     }
 
     /**

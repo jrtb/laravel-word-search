@@ -203,4 +203,114 @@ class LongestWordApiTest extends TestCase
 
         $response->assertStatus(422);
     }
+
+    public function test_fingerprint_based_player_identity()
+    {
+        // Remove the mock to test actual fingerprint generation
+        $this->app->forgetInstance(PlayerIdentityService::class);
+
+        // Create a new instance to test directly
+        $playerIdentityService = new PlayerIdentityService();
+
+        // First request with specific headers
+        $headers1 = [
+            'User-Agent' => 'Test Browser 1.0',
+            'Accept-Language' => 'en-US',
+        ];
+        $server1 = ['REMOTE_ADDR' => '192.168.1.1'];
+        
+        $request1 = Request::create('/api/v1/longest-word', 'POST', [], [], [], 
+            array_merge($server1, [
+                'HTTP_USER_AGENT' => $headers1['User-Agent'],
+                'HTTP_ACCEPT_LANGUAGE' => $headers1['Accept-Language']
+            ])
+        );
+        
+        $fingerprint1 = $playerIdentityService->generateFingerprint($request1);
+        
+        $response1 = $this->withHeaders($headers1)
+            ->withServerVariables($server1)
+            ->withSession(['_id' => 'session-1'])
+            ->postJson('/api/v1/longest-word', [
+                'word' => 'extraordinary'
+            ]);
+
+        $response1->assertStatus(200);
+
+        // Get the first word and its player ID
+        $firstWord = LongestWord::where('word', 'extraordinary')->first();
+        $this->assertNotNull($firstWord, 'First word should be saved');
+        $playerId1 = $firstWord->player_id;
+
+        // Second request with same headers but different session
+        $response2 = $this->withHeaders($headers1)
+            ->withServerVariables($server1)
+            ->withSession(['_id' => 'session-2'])
+            ->postJson('/api/v1/longest-word', [
+                'word' => 'supercalifragilistic'
+            ]);
+
+        $response2->assertStatus(200);
+        
+        // Get the second word and its player ID
+        $secondWord = LongestWord::where('word', 'supercalifragilistic')->first();
+        $this->assertNotNull($secondWord, 'Second word should be saved');
+        $playerId2 = $secondWord->player_id;
+
+        // Verify both requests got the same player ID due to same fingerprint
+        $this->assertEquals($playerId1, $playerId2, 'Same fingerprint should give same player ID');
+
+        // Third request with different headers should get different player ID
+        $headers2 = [
+            'User-Agent' => 'Different Browser 2.0',
+            'Accept-Language' => 'fr-FR',
+        ];
+        $server2 = ['REMOTE_ADDR' => '192.168.1.2'];
+
+        $request2 = Request::create('/api/v1/longest-word', 'POST', [], [], [], 
+            array_merge($server2, [
+                'HTTP_USER_AGENT' => $headers2['User-Agent'],
+                'HTTP_ACCEPT_LANGUAGE' => $headers2['Accept-Language']
+            ])
+        );
+        
+        $fingerprint2 = $playerIdentityService->generateFingerprint($request2);
+
+        // Debug output
+        dump([
+            'First Request' => [
+                'Headers' => $headers1,
+                'Server' => $server1,
+                'Fingerprint' => $fingerprint1,
+                'Player ID' => $playerId1
+            ],
+            'Second Request' => [
+                'Headers' => $headers2,
+                'Server' => $server2,
+                'Fingerprint' => $fingerprint2
+            ]
+        ]);
+
+        $this->assertNotEquals($fingerprint1, $fingerprint2, 'Fingerprints should be different');
+
+        $response3 = $this->withHeaders($headers2)
+            ->withServerVariables($server2)
+            ->withSession(['_id' => 'session-3'])
+            ->postJson('/api/v1/longest-word', [
+                'word' => 'short'
+            ]);
+
+        $response3->assertStatus(200);
+
+        // Get the third word and its player ID
+        $thirdWord = LongestWord::where('word', 'short')->first();
+        $this->assertNotNull($thirdWord, 'Third word should be saved');
+        $playerId3 = $thirdWord->player_id;
+
+        // Debug database state
+        dump('Database state:', LongestWord::all()->toArray());
+
+        // Verify different fingerprint got different player ID
+        $this->assertNotEquals($playerId1, $playerId3, 'Player IDs should be different for different fingerprints');
+    }
 } 

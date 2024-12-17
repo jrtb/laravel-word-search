@@ -19,37 +19,44 @@ A specialized web application for searching and analyzing words based on pattern
 
 - **Longest Word API**: Track the longest word found by each player
   - Cross-domain support for multi-subdomain deployments
-  - Sophisticated player identification system
+  - Browser fingerprint-based player identification
   - RESTful endpoints for submitting and retrieving longest words
   - Player identity persistence across sessions
 
 ## Player Identity System
 
-The application uses a sophisticated player identification system:
+The application uses a sophisticated browser fingerprint-based player identification system:
 
 1. **PlayerIdentityService**
    - Handles all player identification logic
    - Uses request fingerprinting to recognize returning players
    - Maintains player identity across sessions
-   - Configurable fingerprinting strategy
-
-2. **Request Fingerprinting**
-   - Combines multiple request attributes:
+   - Generates consistent SHA-256 hash from request attributes:
      - IP address
      - User agent
      - Accept-Language header
-     - Additional identifiers can be added as needed
+   - Handles edge cases:
+     - Browser changes (new fingerprint)
+     - Session expiration (maintains identity)
+     - Multiple tabs/windows (same identity)
+
+2. **Request Fingerprinting**
+   - Combines multiple request attributes
    - Generates consistent fingerprints for returning players
+   - Handles changes in browser or device
+   - Maintains privacy (no personal data stored)
 
 3. **Session Management**
    - Associates fingerprints with session IDs
    - Updates session associations when players return
-   - Maintains player records across multiple sessions
+   - Maintains player records across sessions
+   - Handles concurrent sessions gracefully
 
 4. **Testing Support**
-   - Fully mockable service for testing
-   - Test-specific fingerprinting strategies
-   - Ensures test isolation and repeatability
+   - Comprehensive test suite for identity system
+   - Tests for fingerprint generation
+   - Tests for cross-session identity maintenance
+   - Tests for different browser scenarios
 
 ## API Documentation
 
@@ -108,7 +115,7 @@ These endpoints are publicly accessible and explicitly exclude CSRF token requir
    ```
    - `is_longest`: Indicates if the submitted word became the new longest word
    - `submitted_word`: The word that was submitted
-   - Note: Words are tracked per player, with identity maintained across sessions
+   - Note: Words are tracked per player, with identity maintained across sessions using browser fingerprinting
 
 2. **Get Current Longest Word**
    ```http
@@ -126,7 +133,7 @@ These endpoints are publicly accessible and explicitly exclude CSRF token requir
    ```
    - `longest_word`: The longest word found by this player (null if no words submitted)
    - `length`: The length of the longest word (0 if no words submitted)
-   - `player_id`: Unique identifier for the player
+   - `player_id`: SHA-256 hash of browser fingerprint
    - Note: Results are player-specific, with identity maintained across sessions
 
 3. **Get Top 10 Longest Words**
@@ -149,7 +156,7 @@ These endpoints are publicly accessible and explicitly exclude CSRF token requir
    }
    ```
    - `words`: Array of longest words across all players, ordered by length
-   - `player_id`: Unique identifier for each word's submitter
+   - `player_id`: SHA-256 hash of submitter's browser fingerprint
    - `length`: Word length
    - `submitted_at`: Timestamp of submission
 
@@ -157,8 +164,8 @@ These endpoints are publicly accessible and explicitly exclude CSRF token requir
 - External APIs use Laravel 11's API middleware group (configured in `bootstrap/app.php`)
 - CSRF protection is explicitly excluded for API routes
 - Session handling is maintained for player tracking:
-  - Each player is identified by request fingerprinting
-  - Player IDs are generated consistently for returning players
+  - Each player is identified by browser fingerprinting
+  - Player IDs are SHA-256 hashes of request attributes
   - Session isolation ensures privacy of word records
 - Cross-domain requests are supported through CORS configuration
 
