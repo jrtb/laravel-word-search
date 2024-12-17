@@ -363,3 +363,27 @@ Note: Bitnami uses `daemon` as the web server user instead of the traditional `w
 ## License
 
 This project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Development
+
+### Local Environment Setup
+
+1. Using PHP's Built-in Server:
+   ```bash
+   # Instead of php artisan serve, use:
+   php -S localhost:8000 -t public/
+   
+   # Or to avoid the "broken pipe" warning, use:
+   php artisan serve --port=8000
+   ```
+
+   Note: If you encounter a "broken pipe" warning when using `php artisan serve`, this is typically caused by the browser making favicon requests. This warning is harmless and can be:
+   - Ignored (it doesn't affect functionality)
+   - Resolved by adding a favicon.ico to your public directory
+   - Avoided by using the `php artisan serve` command instead of the built-in server directly
+
+2. Using Vite for Assets:
+   ```bash
+   # In a separate terminal
+   npm run dev
+   ```
