@@ -23,5 +23,6 @@ Route::prefix('v1')->group(function () {
 
     // Game Word Record Routes
     Route::get('/game-words/highest', [GameWordRecordController::class, 'getHighestWordCount']);
+    Route::get('/game-words/top', [GameWordRecordController::class, 'getTopWordCounts']);
     Route::post('/game-words/update', [GameWordRecordController::class, 'updateWordCount']);
 }); 

@@ -52,4 +52,18 @@ class GameWordRecord extends Model
             'is_new_record' => $isHighest
         ];
     }
+
+    /**
+     * Get the top word counts across all players
+     *
+     * @param int $limit
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public static function getTopWordCounts(int $limit = 10)
+    {
+        return static::select('player_id', 'highest_word_count', 'created_at')
+            ->orderByDesc('highest_word_count')
+            ->limit($limit)
+            ->get();
+    }
 } 

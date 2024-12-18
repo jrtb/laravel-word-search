@@ -66,6 +66,40 @@ class GameWordRecordTest extends TestCase
             ]);
     }
 
+    public function test_can_get_top_word_counts(): void
+    {
+        // Create some test records
+        GameWordRecord::create([
+            'player_id' => 'player-1',
+            'word_count' => 10,
+            'highest_word_count' => 25
+        ]);
+
+        GameWordRecord::create([
+            'player_id' => 'player-2',
+            'word_count' => 15,
+            'highest_word_count' => 30
+        ]);
+
+        GameWordRecord::create([
+            'player_id' => 'player-3',
+            'word_count' => 20,
+            'highest_word_count' => 20
+        ]);
+
+        $response = $this->getJson('/api/v1/game-words/top');
+
+        $response
+            ->assertStatus(200)
+            ->assertJson([
+                'success' => true
+            ])
+            ->assertJsonCount(3, 'records')
+            ->assertJsonPath('records.0.highest_word_count', 30)
+            ->assertJsonPath('records.1.highest_word_count', 25)
+            ->assertJsonPath('records.2.highest_word_count', 20);
+    }
+
     public function test_can_update_word_count(): void
     {
         $playerId = 'test-player-2';

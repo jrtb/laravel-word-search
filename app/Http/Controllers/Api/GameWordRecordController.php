@@ -65,6 +65,42 @@ class GameWordRecordController extends Controller
     }
 
     /**
+     * Get the top 10 word counts across all players
+     * 
+     * @OA\Get(
+     *     path="/api/v1/game-words/top",
+     *     tags={"Game Word Records"},
+     *     summary="Get top word counts",
+     *     description="Returns the top 10 highest word counts across all players",
+     *     @OA\Response(
+     *         response=200,
+     *         description="Successful operation",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(
+     *                 property="records",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="player_id", type="string", example="8f7d9c2e"),
+     *                     @OA\Property(property="highest_word_count", type="integer", example=42),
+     *                     @OA\Property(property="created_at", type="string", format="date-time", example="2024-03-20T10:30:00Z")
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    public function getTopWordCounts(): JsonResponse
+    {
+        $records = GameWordRecord::getTopWordCounts();
+
+        return response()->json([
+            'success' => true,
+            'records' => $records
+        ]);
+    }
+
+    /**
      * Update the word count for the current game session
      * 
      * @OA\Post(

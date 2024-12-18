@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use App\Models\GameWordRecord;
 
 /**
  * @OA\Tag(
@@ -28,7 +29,7 @@ class WordSearchController extends Controller
      */
     public function index()
     {
-        return view('word-search');
+        return view('word-search.index');
     }
 
     /**
