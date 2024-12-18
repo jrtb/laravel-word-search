@@ -22,7 +22,6 @@ class PlayerIdentityService
         // Collect all relevant headers that could identify a browser
         $headers = [
             'user-agent' => $request->header('User-Agent', ''),
-            'accept-language' => $request->header('Accept-Language', ''),
             'accept-encoding' => $request->header('Accept-Encoding', ''),
             'accept-charset' => $request->header('Accept-Charset', ''),
             'sec-ch-ua' => $request->header('Sec-CH-UA', ''),

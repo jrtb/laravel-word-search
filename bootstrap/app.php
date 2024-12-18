@@ -3,48 +3,38 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
-    ->withProviders()
+    ->withRouting(
+        web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
+        commands: __DIR__.'/../routes/console.php',
+        health: '/up',
+    )
     ->withMiddleware(function (Middleware $middleware) {
+        // Configure global middleware
         $middleware->use([
             \Illuminate\Http\Middleware\HandleCors::class,
-            \Illuminate\Http\Middleware\TrustProxies::class,
+            \Illuminate\Cookie\Middleware\EncryptCookies::class,
+            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
+            \Illuminate\Session\Middleware\StartSession::class,
+            \Illuminate\View\Middleware\ShareErrorsFromSession::class,
+            \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
+            \Illuminate\Foundation\Http\Middleware\TrimStrings::class,
+            \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
         ]);
 
+        // Web middleware group
+        $middleware->group('web', [
+            \App\Http\Middleware\VerifyCsrfToken::class,
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        ]);
+
+        // API middleware group
         $middleware->group('api', [
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ]);
-
-        $middleware->group('web', [
-            \Illuminate\Cookie\Middleware\EncryptCookies::class,
-            \Illuminate\Foundation\Http\Middleware\ValidateCsrfToken::class,
-            \Illuminate\Routing\Middleware\SubstituteBindings::class,
-        ]);
-    })
-    ->withRouting(function () {
-        Route::middleware('web')
-            ->group(base_path('routes/web.php'));
-
-        Route::middleware('api')
-            ->prefix('api')
-            ->group(base_path('routes/api.php'));
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        // API exception handling
-        $exceptions->render(function (Request $request, \Throwable $e) {
-            if ($request->is('api/*')) {
-                return response()->json([
-                    'message' => $e->getMessage(),
-                    'code' => $e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface
-                        ? $e->getStatusCode()
-                        : 500
-                ], $e instanceof \Symfony\Component\HttpKernel\Exception\HttpExceptionInterface
-                    ? $e->getStatusCode()
-                    : 500);
-            }
-        });
-    })
-    ->create();
+        //
+    })->create();
