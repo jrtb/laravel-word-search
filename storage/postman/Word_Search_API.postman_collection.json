@@ -311,6 +311,146 @@
 					]
 				}
 			]
+		},
+		{
+			"name": "Game Word Records",
+			"description": "Endpoints for managing game word count records",
+			"item": [
+				{
+					"name": "Get Highest Word Count",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/game-words/highest",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "game-words", "highest"]
+						},
+						"description": "Returns the highest number of words found in a single game for the current player"
+					},
+					"response": [
+						{
+							"name": "Successful Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/game-words/highest"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": {
+								"success": true,
+								"highest_word_count": 42,
+								"player_id": "8f7d9c2e"
+							}
+						}
+					]
+				},
+				{
+					"name": "Update Word Count",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"word_count\": 15\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/game-words/update",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "game-words", "update"]
+						},
+						"description": "Updates the word count for the current game and updates the highest count if exceeded"
+					},
+					"response": [
+						{
+							"name": "Successful Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"word_count\": 15\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/game-words/update"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": {
+								"success": true,
+								"word_count": 15,
+								"highest_word_count": 42,
+								"is_new_record": false,
+								"player_id": "8f7d9c2e"
+							}
+						},
+						{
+							"name": "Validation Error",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/game-words/update"
+								}
+							},
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": {
+								"success": false,
+								"errors": {
+									"word_count": [
+										"The word count field is required."
+									]
+								}
+							}
+						}
+					]
+				}
+			]
 		}
 	],
 	"variable": [

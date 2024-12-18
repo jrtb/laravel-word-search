@@ -30,6 +30,13 @@ A specialized web application for searching and analyzing words based on pattern
   - Independent from word submissions
   - RESTful endpoints for session management
 
+- **Game Word Count API**: Track words found in each game session
+  - Records number of words found per game
+  - Maintains highest word count records per player
+  - Automatic record updates when exceeded
+  - Player-specific tracking using fingerprinting
+  - RESTful endpoints for record management
+
 ## Player Identity System
 
 The application uses a sophisticated browser fingerprint-based player identification system:
@@ -203,6 +210,49 @@ These endpoints are publicly accessible and explicitly exclude CSRF token requir
    - `current_streak`: Current consecutive days streak (0 if broken)
    - `highest_streak`: Highest streak ever achieved
    - `last_session_date`: Date of the last recorded session
+
+4. **Get Player's Highest Word Count**
+   ```http
+   GET /api/v1/game-words/highest
+   ```
+   
+   **Response**
+   ```json
+   {
+       "success": true,
+       "highest_word_count": 42,
+       "player_id": "8f7d9c2e"
+   }
+   ```
+   - `highest_word_count`: The highest number of words found in a single game (0 if no games played)
+   - `player_id`: SHA-256 hash of browser fingerprint
+   - Note: Results are player-specific, with identity maintained across sessions
+
+5. **Update Game Word Count**
+   ```http
+   POST /api/v1/game-words/update
+   Content-Type: application/json
+
+   {
+       "word_count": 15
+   }
+   ```
+   
+   **Response**
+   ```json
+   {
+       "success": true,
+       "word_count": 15,
+       "highest_word_count": 42,
+       "is_new_record": false,
+       "player_id": "8f7d9c2e"
+   }
+   ```
+   - `word_count`: The number of words found in the current game
+   - `highest_word_count`: Player's highest word count across all games
+   - `is_new_record`: Whether this submission set a new record
+   - `player_id`: SHA-256 hash of browser fingerprint
+   - Note: Automatically updates highest count if current count exceeds it
 
 #### Security Configuration
 - External APIs use Laravel 11's API middleware group (configured in `bootstrap/app.php`)

@@ -23,17 +23,17 @@
         }
     ],
     "paths": {
-        "/api/v1/longest-word": {
+        "/api/v1/game-words/highest": {
             "get": {
                 "tags": [
-                    "Longest Word"
+                    "Game Word Records"
                 ],
-                "summary": "Get current longest word",
-                "description": "Retrieves the longest word stored for the current session. Each player sees only their own longest word and receives their unique player_id.",
-                "operationId": "getLongestWord",
+                "summary": "Get player's highest word count",
+                "description": "Returns the highest number of words found in a single game for the current player",
+                "operationId": "6ab407543dd5cd115199612689a13073",
                 "responses": {
                     "200": {
-                        "description": "Current longest word information",
+                        "description": "Successful operation",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -42,19 +42,12 @@
                                             "type": "boolean",
                                             "example": true
                                         },
-                                        "longest_word": {
-                                            "description": "The player's longest word, null if no words submitted",
-                                            "type": "string",
-                                            "example": "extraordinary",
-                                            "nullable": true
-                                        },
-                                        "length": {
-                                            "description": "Length of the longest word, 0 if no words submitted",
+                                        "highest_word_count": {
                                             "type": "integer",
-                                            "example": 13
+                                            "example": 42
                                         },
                                         "player_id": {
-                                            "description": "Unique identifier for the player (first 8 characters of session ID)",
+                                            "description": "SHA-256 hash of browser fingerprint",
                                             "type": "string",
                                             "example": "8f7d9c2e"
                                         }
@@ -68,13 +61,150 @@
                         "description": "Too many requests - rate limit exceeded (60 per minute)"
                     }
                 }
+            }
+        },
+        "/api/v1/game-words/update": {
+            "post": {
+                "tags": [
+                    "Game Word Records"
+                ],
+                "summary": "Update game word count",
+                "description": "Updates the word count for the current game and updates the highest count if exceeded",
+                "operationId": "fa25ba1a3a32ef145318fdab8fc32663",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "word_count"
+                                ],
+                                "properties": {
+                                    "word_count": {
+                                        "description": "Number of words found in the current game",
+                                        "type": "integer",
+                                        "example": 15
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "word_count": {
+                                            "type": "integer",
+                                            "example": 15
+                                        },
+                                        "highest_word_count": {
+                                            "type": "integer",
+                                            "example": 42
+                                        },
+                                        "is_new_record": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "player_id": {
+                                            "description": "SHA-256 hash of browser fingerprint",
+                                            "type": "string",
+                                            "example": "8f7d9c2e"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "errors": {
+                                            "properties": {
+                                                "word_count": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "The word count field is required."
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests - rate limit exceeded (60 per minute)"
+                    }
+                }
+            }
+        },
+        "/api/v1/longest-word": {
+            "get": {
+                "tags": [
+                    "Longest Word"
+                ],
+                "summary": "Get current player's longest word",
+                "description": "Retrieves the longest word submitted by the current player. Player identity is maintained across sessions using browser fingerprinting.",
+                "operationId": "getLongestWord",
+                "responses": {
+                    "200": {
+                        "description": "Current longest word information",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "longest_word": {
+                                            "type": "string",
+                                            "example": "extraordinary",
+                                            "nullable": true
+                                        },
+                                        "length": {
+                                            "type": "integer",
+                                            "example": 13
+                                        },
+                                        "player_id": {
+                                            "type": "string",
+                                            "example": "8f7d9c2e"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
             },
             "post": {
                 "tags": [
                     "Longest Word"
                 ],
                 "summary": "Submit a new word",
-                "description": "Attempts to store a word if it's longer than the current longest word for the session. Each player maintains their own longest word record, identified by their session.",
+                "description": "Attempts to store a word if it's longer than the current longest word for the player. Player identity is maintained across sessions using browser fingerprinting (User-Agent, Accept-Language headers, and IP address).",
                 "operationId": "storeLongestWord",
                 "requestBody": {
                     "required": true,
@@ -116,6 +246,11 @@
                                             "description": "The word that was submitted",
                                             "type": "string",
                                             "example": "extraordinary"
+                                        },
+                                        "player_id": {
+                                            "description": "SHA-256 hash of the player's browser fingerprint",
+                                            "type": "string",
+                                            "example": "8f7d9c2e"
                                         }
                                     },
                                     "type": "object"
@@ -125,9 +260,6 @@
                     },
                     "422": {
                         "description": "Validation error - empty or invalid word"
-                    },
-                    "429": {
-                        "description": "Too many requests - rate limit exceeded (60 per minute)"
                     }
                 }
             }
@@ -138,7 +270,7 @@
                     "Longest Word"
                 ],
                 "summary": "Get top 10 longest words",
-                "description": "Retrieves the top 10 longest words submitted by all players, ordered by word length. Each word includes the submitter's player_id for identification.",
+                "description": "Retrieves the top 10 longest words submitted by all players, ordered by word length. Each word includes the submitter's player ID (SHA-256 hash of their browser fingerprint), which remains consistent across their sessions.",
                 "operationId": "getTopLongestWords",
                 "responses": {
                     "200": {
@@ -161,7 +293,7 @@
                                                         "example": "supercalifragilistic"
                                                     },
                                                     "player_id": {
-                                                        "description": "Unique identifier for the player who submitted the word",
+                                                        "description": "SHA-256 hash of the player's browser fingerprint",
                                                         "type": "string",
                                                         "example": "8f7d9c2e"
                                                     },
@@ -185,9 +317,88 @@
                                 }
                             }
                         }
-                    },
-                    "429": {
-                        "description": "Too many requests - rate limit exceeded (60 per minute)"
+                    }
+                }
+            }
+        },
+        "/api/v1/session": {
+            "post": {
+                "tags": [
+                    "Player Session"
+                ],
+                "summary": "Record a player session",
+                "description": "Records that a player has started a game session. Used for tracking daily streaks.",
+                "operationId": "recordSession",
+                "responses": {
+                    "200": {
+                        "description": "Session recorded successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "current_streak": {
+                                            "type": "integer",
+                                            "example": 3
+                                        },
+                                        "highest_streak": {
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "last_session_date": {
+                                            "type": "string",
+                                            "format": "date",
+                                            "example": "2024-03-19"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/session/streak": {
+            "get": {
+                "tags": [
+                    "Player Session"
+                ],
+                "summary": "Get player's streak information",
+                "description": "Retrieves the current and highest streak information for the player based on daily game sessions.",
+                "operationId": "getSessionStreak",
+                "responses": {
+                    "200": {
+                        "description": "Player's streak information",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "current_streak": {
+                                            "type": "integer",
+                                            "example": 3
+                                        },
+                                        "highest_streak": {
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "last_session_date": {
+                                            "type": "string",
+                                            "format": "date",
+                                            "example": "2024-03-19"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -402,8 +613,16 @@
     },
     "tags": [
         {
+            "name": "Game Word Records",
+            "description": "API endpoints for managing game word count records"
+        },
+        {
             "name": "Longest Word",
-            "description": "External API endpoints for tracking longest words found by players. Each player is identified by their session, with a shortened player_id for display."
+            "description": "External API endpoints for tracking longest words found by players. Players are identified using request fingerprinting based on User-Agent, Accept-Language headers, and IP address for consistent identity across sessions."
+        },
+        {
+            "name": "Player Session",
+            "description": "Endpoints for tracking player sessions and streaks. Sessions are recorded when players load the game."
         },
         {
             "name": "Word Search",

@@ -1,6 +1,6 @@
 # Conversation Prompt
 
-You are assisting with a Laravel Word Search application. This application allows users to create, solve, and share word search puzzles, as well as track their longest discovered words and daily play streaks.
+You are assisting with a Laravel Word Search application. This application allows users to create, solve, and share word search puzzles, as well as track their longest discovered words, daily play streaks, and highest word counts per game.
 
 Please consider the following context when providing assistance:
 
@@ -35,6 +35,11 @@ Please consider the following context when providing assistance:
      - Consecutive day streak tracking
      - Highest streak preservation
      - Independent from word submissions
+   - Game word count tracking:
+     - Records words found per game session
+     - Tracks highest word count achieved
+     - Player-specific records
+     - Automatic record updates
 
 4. Database Structure:
    - Uses migrations for schema management
@@ -49,6 +54,11 @@ Please consider the following context when providing assistance:
        - session_date: Date of the session
        - current_streak: Current consecutive days streak
        - highest_streak: Highest streak achieved
+       - timestamps: Created/updated tracking
+     - game_word_records: Tracks words found per game
+       - player_id: Unique player identifier
+       - word_count: Current game session count
+       - highest_word_count: Highest count achieved
        - timestamps: Created/updated tracking
 
 5. Player Identity System:
