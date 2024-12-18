@@ -299,25 +299,9 @@ Laravel 11 introduces a simplified application structure:
     - API routes loaded from routes/api.php for better organization of versioned endpoints
     - Web routes loaded from routes/web.php for web interface endpoints
   - Exception handling
-- `app/Providers/RateLimitingServiceProvider.php`: Handles API rate limiting configuration
-  - Configures rate limits for API endpoints (60 requests per minute per IP)
-  - Uses Laravel's RateLimiter facade
-  - Registered in bootstrap/app.php using ->withProviders()
 - No traditional `Kernel.php` files (removed in Laravel 11)
 - Streamlined middleware configuration
 - Modern routing approach
-
-### Rate Limiting
-
-The application implements rate limiting through a dedicated service provider:
-
-- Rate limits are configured in `RateLimitingServiceProvider`
-- Default limit: 60 requests per minute per IP address
-- Rate limit headers included in API responses:
-  - `X-RateLimit-Limit`: Maximum requests per minute
-  - `X-RateLimit-Remaining`: Remaining requests in current window
-- Rate limiting is applied to all API endpoints under `/api/v1/`
-- Configuration can be easily modified in the service provider
 
 ## Required S3 Assets
 

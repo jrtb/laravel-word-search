@@ -276,21 +276,6 @@ class LongestWordApiTest extends TestCase
         
         $fingerprint2 = $playerIdentityService->generateFingerprint($request2);
 
-        // Debug output
-        dump([
-            'First Request' => [
-                'Headers' => $headers1,
-                'Server' => $server1,
-                'Fingerprint' => $fingerprint1,
-                'Player ID' => $playerId1
-            ],
-            'Second Request' => [
-                'Headers' => $headers2,
-                'Server' => $server2,
-                'Fingerprint' => $fingerprint2
-            ]
-        ]);
-
         $this->assertNotEquals($fingerprint1, $fingerprint2, 'Fingerprints should be different');
 
         $response3 = $this->withHeaders($headers2)
@@ -306,9 +291,6 @@ class LongestWordApiTest extends TestCase
         $thirdWord = LongestWord::where('word', 'short')->first();
         $this->assertNotNull($thirdWord, 'Third word should be saved');
         $playerId3 = $thirdWord->player_id;
-
-        // Debug database state
-        dump('Database state:', LongestWord::all()->toArray());
 
         // Verify different fingerprint got different player ID
         $this->assertNotEquals($playerId1, $playerId3, 'Player IDs should be different for different fingerprints');

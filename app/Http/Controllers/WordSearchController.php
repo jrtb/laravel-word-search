@@ -248,69 +248,76 @@ class WordSearchController extends Controller
                 $processedLines = 0;
                 $chunkSize = 5000; // Increased chunk size for better performance
 
-                // Process the file line by line instead of loading chunks into memory
+                // Process the CSV file
                 while (($data = fgetcsv($handle)) !== false) {
+                    $processedLines++;
+                    
+                    // Validate row data
                     if (count($data) < 2) {
+                        Log::warning('Invalid CSV row format', ['line' => $processedLines, 'data' => $data]);
                         continue;
                     }
 
-                    $word = trim($data[0]);
-                    $wordFrequency = floatval($data[1]);
+                    try {
+                        $word = trim($data[0]);
+                        $wordFrequency = floatval($data[1]);
 
-                    if ($wordFrequency >= $frequency) {
-                        $totalCount++;
-                        if (count($matchingWords) < 200) {
+                        if ($wordFrequency >= $frequency) {
                             $matchingWords[] = $word;
+                            $totalCount++;
                         }
-                    }
-                    
-                    $processedLines++;
 
-                    // Log progress every 100,000 lines
-                    if ($processedLines % 100000 === 0) {
-                        Log::info('Processing progress', [
-                            'lines_processed' => $processedLines,
-                            'matches_found' => $totalCount
+                        // Process in chunks to avoid memory issues
+                        if (count($matchingWords) >= $chunkSize) {
+                            break;
+                        }
+                    } catch (\Exception $e) {
+                        Log::warning('Error processing row', [
+                            'line' => $processedLines,
+                            'error' => $e->getMessage(),
+                            'data' => $data
                         ]);
-                    }
-
-                    // If we have enough matches and have processed at least 100,000 lines,
-                    // we can stop early as we're unlikely to find significantly different results
-                    if ($totalCount > 200 && $processedLines > 100000) {
-                        break;
+                        continue;
                     }
                 }
 
-                fclose($handle);
-                unlink($tempFile); // Delete temporary file
-
-                Log::info('Completed frequency search', [
-                    'total_matches' => $totalCount,
-                    'sample_size' => count($matchingWords),
-                    'processed_lines' => $processedLines
+                Log::info('Frequency search completed', [
+                    'processed_lines' => $processedLines,
+                    'matches_found' => $totalCount
                 ]);
 
+            } catch (\Exception $e) {
+                Log::error('Error processing frequency data: ' . $e->getMessage());
                 return response()->json([
-                    'success' => true,
-                    'total_count' => $totalCount,
-                    'words' => $matchingWords
+                    'success' => false,
+                    'error' => 'Error processing frequency data'
                 ]);
-
-            } catch (\Throwable $e) {
-                // Clean up temporary file if it exists
+            } finally {
+                // Clean up resources
+                if (isset($handle) && is_resource($handle)) {
+                    fclose($handle);
+                }
                 if (file_exists($tempFile)) {
                     unlink($tempFile);
                 }
-                throw $e;
             }
 
-        } catch (\Throwable $e) {
-            Log::error('Frequency search error: ' . $e->getMessage(), [
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
+            // Sort words by length (descending) and take top 200
+            usort($matchingWords, function($a, $b) {
+                return strlen($b) - strlen($a);
+            });
+            $matchingWords = array_slice($matchingWords, 0, 200);
+
+            return response()->json([
+                'success' => true,
+                'total_count' => $totalCount,
+                'words' => $matchingWords
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Frequency search failed: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString()
             ]);
-            
             return response()->json([
                 'success' => false,
                 'error' => 'An error occurred while searching frequencies'

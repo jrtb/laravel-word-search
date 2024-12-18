@@ -71,7 +71,8 @@ class LongestWordController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="is_longest", type="boolean", example=true, description="Whether this word became the player's new longest word"),
-     *             @OA\Property(property="submitted_word", type="string", example="extraordinary", description="The word that was submitted")
+     *             @OA\Property(property="submitted_word", type="string", example="extraordinary", description="The word that was submitted"),
+     *             @OA\Property(property="player_id", type="string", example="8f7d9c2e", description="SHA-256 hash of the player's browser fingerprint")
      *         )
      *     ),
      *     @OA\Response(
@@ -91,9 +92,7 @@ class LongestWordController extends Controller
         $playerId = $this->findExistingPlayerId($request);
 
         // Get user's current longest word by player_id
-        $currentLongest = LongestWord::where('player_id', $playerId)
-            ->orderByRaw('LENGTH(word) DESC')
-            ->first();
+        $currentLongest = LongestWord::playerLongest($playerId)->first();
 
         $isLongest = !$currentLongest || strlen($word) > strlen($currentLongest->word);
 
@@ -113,7 +112,8 @@ class LongestWordController extends Controller
         return response()->json([
             'success' => true,
             'is_longest' => $isLongest,
-            'submitted_word' => $word
+            'submitted_word' => $word,
+            'player_id' => $playerId
         ]);
     }
 
@@ -142,9 +142,7 @@ class LongestWordController extends Controller
         $playerId = $this->findExistingPlayerId($request);
         
         // Get the longest word for this player
-        $longestWord = LongestWord::where('player_id', $playerId)
-            ->orderByRaw('LENGTH(word) DESC')
-            ->first();
+        $longestWord = LongestWord::playerLongest($playerId)->first();
 
         // Always update session ID
         if ($longestWord) {
@@ -188,10 +186,8 @@ class LongestWordController extends Controller
      */
     public function topWords(): JsonResponse
     {
-        $topWords = LongestWord::select('word', 'player_id', 'created_at')
-            ->orderByRaw('LENGTH(word) DESC')
+        $topWords = LongestWord::topLongest(10)
             ->get()
-            ->unique('player_id')
             ->map(function ($word) {
                 return [
                     'word' => $word->word,
@@ -199,10 +195,7 @@ class LongestWordController extends Controller
                     'length' => strlen($word->word),
                     'submitted_at' => $word->created_at
                 ];
-            })
-            ->sortByDesc('length')
-            ->values()
-            ->take(10);
+            });
 
         return response()->json([
             'success' => true,
