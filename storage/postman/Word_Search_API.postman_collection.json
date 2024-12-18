@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "7e9c2f3a-5b4d-4c1a-8f3e-1d2e3f4a5b6c",
 		"name": "Word Search API",
-		"description": "API collection for the Laravel Word Search application. This collection includes endpoints for pattern search, frequency search, and longest word tracking. Player identity is maintained across sessions using browser fingerprinting based on User-Agent, Accept-Language headers, and IP address.",
+		"description": "API collection for the Laravel Word Search application. This collection includes endpoints for pattern search, frequency search, longest word tracking, and session/streak tracking. Player identity is maintained across sessions using browser fingerprinting based on User-Agent, Accept-Language headers, and IP address.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -66,7 +66,7 @@
 		},
 		{
 			"name": "External APIs",
-			"description": "Public APIs for longest word tracking. No CSRF token required. Player identity is maintained across sessions using browser fingerprinting (User-Agent, Accept-Language headers, and IP address).",
+			"description": "Public APIs for longest word tracking and session management. No CSRF token required. Player identity is maintained across sessions using browser fingerprinting (User-Agent, Accept-Language headers, and IP address).",
 			"item": [
 				{
 					"name": "Submit Word",
@@ -215,6 +215,98 @@
 								}
 							],
 							"body": "{\n    \"success\": true,\n    \"words\": [\n        {\n            \"word\": \"supercalifragilistic\",\n            \"player_id\": \"8f7d9c2e\",\n            \"length\": 20,\n            \"submitted_at\": \"2024-03-15T10:30:00Z\"\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "Record Session",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "User-Agent",
+								"value": "PostmanRuntime/7.32.3",
+								"description": "Used for player identification"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en-US",
+								"description": "Used for player identification"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/session",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "session"]
+						},
+						"description": "Record a player session for streak tracking. Multiple sessions in the same day count as one day for streak purposes. Player identity is maintained across sessions using browser fingerprinting."
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/session"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"success\": true,\n    \"current_streak\": 3,\n    \"highest_streak\": 5,\n    \"last_session_date\": \"2024-03-19\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Streak Info",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "User-Agent",
+								"value": "PostmanRuntime/7.32.3",
+								"description": "Used for player identification"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en-US",
+								"description": "Used for player identification"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/session/streak",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "session", "streak"]
+						},
+						"description": "Get the current player's streak information. Returns current streak (0 if broken), highest streak ever achieved, and the date of the last session."
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/session/streak"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"success\": true,\n    \"current_streak\": 3,\n    \"highest_streak\": 5,\n    \"last_session_date\": \"2024-03-19\"\n}"
 						}
 					]
 				}

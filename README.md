@@ -23,6 +23,13 @@ A specialized web application for searching and analyzing words based on pattern
   - RESTful endpoints for submitting and retrieving longest words
   - Player identity persistence across sessions
 
+- **Session Tracking**: Track player activity and daily streaks
+  - Daily session recording
+  - Consecutive day streak tracking
+  - Highest streak preservation
+  - Independent from word submissions
+  - RESTful endpoints for session management
+
 ## Player Identity System
 
 The application uses a sophisticated browser fingerprint-based player identification system:
@@ -160,6 +167,43 @@ These endpoints are publicly accessible and explicitly exclude CSRF token requir
    - `length`: Word length
    - `submitted_at`: Timestamp of submission
 
+4. **Record Player Session**
+   ```http
+   POST /api/v1/session
+   ```
+   
+   **Response**
+   ```json
+   {
+       "success": true,
+       "current_streak": 3,
+       "highest_streak": 5,
+       "last_session_date": "2024-03-19"
+   }
+   ```
+   - `current_streak`: Number of consecutive days played
+   - `highest_streak`: Highest streak achieved by the player
+   - `last_session_date`: Date of the most recent session
+   - Note: Multiple sessions in the same day count as one day for streak purposes
+
+5. **Get Player Streak Info**
+   ```http
+   GET /api/v1/session/streak
+   ```
+   
+   **Response**
+   ```json
+   {
+       "success": true,
+       "current_streak": 3,
+       "highest_streak": 5,
+       "last_session_date": "2024-03-19"
+   }
+   ```
+   - `current_streak`: Current consecutive days streak (0 if broken)
+   - `highest_streak`: Highest streak ever achieved
+   - `last_session_date`: Date of the last recorded session
+
 #### Security Configuration
 - External APIs use Laravel 11's API middleware group (configured in `bootstrap/app.php`)
 - CSRF protection is explicitly excluded for API routes
@@ -287,6 +331,35 @@ php artisan serve
 ```bash
 npm run dev
 ```
+
+## Database Management
+
+### Development Environment
+
+The application uses SQLite by default for development:
+- Database file location: `database/database.sqlite`
+- Configuration in `.env`: `DB_CONNECTION=sqlite`
+
+#### Database Reset Scenarios
+The database may be reset (clearing all player data) in these cases:
+1. Running `php artisan migrate:fresh` - Rebuilds database from scratch
+2. Running `php artisan migrate:reset` - Rolls back all migrations
+3. Manually recreating database: `rm database/database.sqlite && touch database/database.sqlite`
+4. Running tests with `RefreshDatabase` trait
+
+#### Preserving Data
+To preserve player data during development:
+- Use `php artisan migrate` instead of `migrate:fresh` when adding new migrations
+- Take database backups before major migration changes
+- Consider using database seeders for test data
+
+### Production Environment
+
+For production deployments:
+- Use a robust database system (MySQL/PostgreSQL)
+- Implement proper backup strategies
+- Never run `migrate:fresh` or `migrate:reset` on production
+- Use only `php artisan migrate` for schema updates
 
 ## Application Structure
 

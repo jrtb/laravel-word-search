@@ -1,6 +1,6 @@
 # Conversation Prompt
 
-You are assisting with a Laravel Word Search application. This application allows users to create, solve, and share word search puzzles, as well as track their longest discovered words.
+You are assisting with a Laravel Word Search application. This application allows users to create, solve, and share word search puzzles, as well as track their longest discovered words and daily play streaks.
 
 Please consider the following context when providing assistance:
 
@@ -27,28 +27,37 @@ Please consider the following context when providing assistance:
    - Pattern-based word searching
    - Frequency-based word analysis
    - Longest word tracking system:
-     - Browser fingerprint-based player identification using PlayerIdentityService
-     - Consistent player recognition across sessions using:
-       - IP address
-       - User agent
-       - Accept-Language header
+     - Browser fingerprint-based player identification
      - Individual longest word records per player
      - Top 10 longest words leaderboard
-     - Cross-session player identity maintenance
+   - Session and streak tracking:
+     - Daily player session recording
+     - Consecutive day streak tracking
+     - Highest streak preservation
+     - Independent from word submissions
 
 4. Database Structure:
    - Uses migrations for schema management
    - Key tables include:
      - longest_words: Tracks player word submissions
-       - session_id: Current session identifier (updated on each request)
-       - player_id: Unique player identifier (SHA-256 hash of browser fingerprint)
+       - session_id: Current session identifier
+       - player_id: Unique player identifier (SHA-256 hash)
        - word: The submitted word
+       - timestamps: Created/updated tracking
+     - player_sessions: Tracks daily player activity
+       - player_id: Unique player identifier
+       - session_date: Date of the session
+       - current_streak: Current consecutive days streak
+       - highest_streak: Highest streak achieved
        - timestamps: Created/updated tracking
 
 5. Player Identity System:
    - PlayerIdentityService handles player identification
    - Uses request fingerprinting to recognize returning players
-   - Generates consistent SHA-256 hash from request attributes
+   - Generates consistent SHA-256 hash from request attributes:
+     - IP address
+     - User agent
+     - Accept-Language header
    - Maintains player identity across sessions
    - Supports both test and production environments
    - Follows Laravel's dependency injection patterns
@@ -58,17 +67,27 @@ Please consider the following context when providing assistance:
      - Session expiration
      - Multiple tabs/windows
 
-6. Testing:
+6. Session Tracking System:
+   - Independent from word submissions
+   - Records daily player activity
+   - Maintains streak information:
+     - Increments for consecutive days
+     - Resets after missing a day
+     - Preserves highest achieved streak
+   - Handles multiple sessions per day
+   - Provides streak statistics via API
+
+7. Testing:
    - Feature tests for all API endpoints
    - Dedicated fingerprint-based identity tests
-   - Session handling in tests
+   - Session handling and streak tracking tests
    - Database assertions
    - Test isolation and independence
 
-7. The application uses Tailwind CSS for styling
-8. Security and best practices should be maintained
-9. Code should be clean, well-documented, and maintainable
-10. The application is deployed in two environments:
+8. The application uses Tailwind CSS for styling
+9. Security and best practices should be maintained
+10. Code should be clean, well-documented, and maintainable
+11. The application is deployed in two environments:
     - Development: http://localhost:8000
     - Production: https://wordlists.fairladymedia.com
       - Hosted on AWS Lightsail
@@ -77,7 +96,7 @@ Please consider the following context when providing assistance:
       - Application root: /home/bitnami/stack/apache2/htdocs/laravel-word-search
       - Requires specific Bitnami-compatible file permissions
 
-11. Security and Error Handling:
+12. Security and Error Handling:
     - CSRF Protection:
       - All web routes protected by CSRF tokens
       - Token included in blade templates via meta tag
@@ -93,6 +112,33 @@ Please consider the following context when providing assistance:
       - Proper status codes
       - Consistent error format
       - Environment-specific error detail levels
+
+13. Database Management:
+    - Development Environment:
+      - Uses SQLite by default
+      - Database file: database/database.sqlite
+      - Data persistence considerations:
+        - Database may be reset during development
+        - Migrations may clear data (migrate:fresh, migrate:reset)
+        - Test runs may clear data (RefreshDatabase trait)
+    - Production Environment:
+      - Uses MySQL/PostgreSQL
+      - Data persistence is maintained
+      - Only additive migrations are used
+    - Player Data Handling:
+      - Player identities persist across sessions via fingerprinting
+      - Actual player data may be reset in development
+      - Consider using seeders for consistent test data
+      - Take backups before major database changes
+
+When handling database operations:
+- Be aware of commands that reset data (migrate:fresh, migrate:reset)
+- Use appropriate migration strategies for development vs. production
+- Consider data preservation needs when running tests
+- Document database reset scenarios in code comments
+- Implement proper error handling for database operations
+- Use transactions for critical data operations
+- Log significant database changes
 
 Before providing assistance:
 1. Verify compatibility with Laravel 11's architecture and versions specified above
