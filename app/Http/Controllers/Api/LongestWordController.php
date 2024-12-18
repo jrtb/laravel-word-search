@@ -121,17 +121,17 @@ class LongestWordController extends Controller
      * @OA\Get(
      *     path="/api/v1/longest-word",
      *     operationId="getLongestWord",
-     *     summary="Get current longest word",
-     *     description="Retrieves the longest word stored for the current player. Player identity is maintained across sessions using browser fingerprinting (User-Agent, Accept-Language headers, and IP address), ensuring consistent results even with different session IDs.",
+     *     summary="Get current player's longest word",
+     *     description="Retrieves the longest word submitted by the current player. Player identity is maintained across sessions using browser fingerprinting.",
      *     tags={"Longest Word"},
      *     @OA\Response(
      *         response=200,
      *         description="Current longest word information",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="longest_word", type="string", example="extraordinary", nullable=true, description="The player's longest word, null if no words submitted"),
-     *             @OA\Property(property="length", type="integer", example=13, description="Length of the longest word, 0 if no words submitted"),
-     *             @OA\Property(property="player_id", type="string", example="8f7d9c2e", description="SHA-256 hash of the player's browser fingerprint, consistent across sessions")
+     *             @OA\Property(property="longest_word", type="string", example="extraordinary", nullable=true),
+     *             @OA\Property(property="length", type="integer", example=13),
+     *             @OA\Property(property="player_id", type="string", example="8f7d9c2e")
      *         )
      *     )
      * )
@@ -140,8 +140,7 @@ class LongestWordController extends Controller
     {
         $sessionId = $this->getSessionId();
         $playerId = $this->findExistingPlayerId($request);
-        
-        // Get the longest word for this player
+
         $longestWord = LongestWord::playerLongest($playerId)->first();
 
         // Always update session ID

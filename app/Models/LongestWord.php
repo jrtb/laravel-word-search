@@ -12,7 +12,7 @@ class LongestWord extends Model
     protected $fillable = [
         'word',
         'session_id',
-        'player_id',
+        'player_id'
     ];
 
     /**
