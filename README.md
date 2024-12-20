@@ -23,12 +23,12 @@ A specialized web application for searching and analyzing words based on pattern
   - RESTful endpoints for submitting and retrieving longest words
   - Player identity persistence across sessions
 
-- **Session Tracking**: Track player activity and daily streaks
-  - Daily session recording
-  - Consecutive day streak tracking
-  - Highest streak preservation
-  - Independent from word submissions
-  - RESTful endpoints for session management
+- **Session Tracking**: Track player activity with 24-hour sessions
+  - Automatic session management based on activity
+  - Sessions remain active for 24 hours from last activity
+  - New sessions created after 24 hours of inactivity
+  - Player identity maintained across sessions
+  - Independent streak tracking for daily activity
 
 - **Game Word Count API**: Track words found in each game session
   - Records number of words found per game
@@ -124,12 +124,16 @@ These endpoints are publicly accessible and explicitly exclude CSRF token requir
    {
        "success": true,
        "is_longest": true,
-       "submitted_word": "extraordinary"
+       "submitted_word": "extraordinary",
+       "player_id": "8f7d9c2e"
    }
    ```
    - `is_longest`: Indicates if the submitted word became the new longest word
    - `submitted_word`: The word that was submitted
-   - Note: Words are tracked per player, with identity maintained across sessions using browser fingerprinting
+   - `player_id`: SHA-256 hash of browser fingerprint
+   - Note: Words are tracked per player, with identity maintained across sessions
+   - Sessions remain active for 24 hours from last activity
+   - New sessions are created after 24 hours of inactivity
 
 2. **Get Current Longest Word**
    ```http
@@ -602,3 +606,35 @@ This project is open-sourced software licensed under the [MIT license](https://o
    - Verify proper headers are being sent
    - Ensure proper error handling in frontend code
    - Check server logs for detailed error messages
+
+## Session Management
+
+### 24-Hour Session System
+
+The application implements a sophisticated 24-hour session management system:
+
+1. **Session Creation**
+   - New sessions are created for first-time players
+   - Sessions are also created after 24 hours of inactivity
+   - Session IDs are unique per player and time period
+
+2. **Session Duration**
+   - Sessions remain active for 24 hours from last activity
+   - Any word submission within 24 hours reuses the same session
+   - After 24 hours of inactivity, a new session is created
+
+3. **Player Identity**
+   - Player identity is maintained independently of sessions
+   - Same player can have multiple sessions over time
+   - Browser fingerprinting ensures consistent player identification
+
+4. **Session Tracking**
+   - Each word submission is associated with a session
+   - Session timestamps track player activity
+   - Session data helps analyze player engagement patterns
+
+5. **Implementation Details**
+   - Sessions are managed automatically by the application
+   - No manual session management required from players
+   - Seamless experience across multiple play sessions
+   - Maintains data consistency across session changes

@@ -9,6 +9,7 @@ use App\Models\LongestWord;
 use App\Services\PlayerIdentityService;
 use Mockery;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class LongestWordApiTest extends TestCase
 {
@@ -60,25 +61,39 @@ class LongestWordApiTest extends TestCase
             ->withAnyArgs()
             ->andReturn($playerId);
 
-        // First session
+        // First session - longer word
         $response = $this->withSession(['_id' => 'session-1'])
             ->postJson('/api/v1/longest-word', [
                 'word' => 'extraordinary'
             ]);
 
-        $response->assertStatus(200);
-
-        // Second session
-        $response = $this->withSession(['_id' => 'session-2'])
-            ->postJson('/api/v1/longest-word', [
-                'word' => 'supercalifragilistic'
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'is_longest' => true
             ]);
 
-        $response->assertStatus(200);
+        // Second session - shorter word (should not be stored)
+        $response = $this->withSession(['_id' => 'session-2'])
+            ->postJson('/api/v1/longest-word', [
+                'word' => 'short'
+            ]);
 
-        // Both words should be associated with the same player
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'is_longest' => false
+            ]);
+
+        // Verify the longer word is stored
         $this->assertDatabaseHas('longest_words', [
-            'word' => 'supercalifragilistic',
+            'word' => 'extraordinary',
+            'player_id' => $playerId
+        ]);
+
+        // Verify the shorter word was not stored
+        $this->assertDatabaseMissing('longest_words', [
+            'word' => 'short',
             'player_id' => $playerId
         ]);
     }
@@ -97,7 +112,7 @@ class LongestWordApiTest extends TestCase
         // First player submits a word
         $response = $this->withSession(['_id' => 'session-1'])
             ->postJson('/api/v1/longest-word', [
-                'word' => 'supercalifragilistic'
+                'word' => 'extraordinary'
             ]);
 
         $response->assertStatus(200);
@@ -118,7 +133,7 @@ class LongestWordApiTest extends TestCase
 
         // Verify each player has their own word
         $this->assertDatabaseHas('longest_words', [
-            'word' => 'supercalifragilistic',
+            'word' => 'extraordinary',
             'player_id' => $firstPlayerId
         ]);
 
@@ -205,9 +220,82 @@ class LongestWordApiTest extends TestCase
         $response->assertStatus(422);
     }
 
+    public function test_reuses_session_within_24_hours()
+    {
+        $playerId = 'player-123';
+        $this->playerIdentityService
+            ->shouldReceive('findOrGeneratePlayerId')
+            ->twice()
+            ->withAnyArgs()
+            ->andReturn($playerId);
+
+        // First submission at current time
+        $now = Carbon::create(2024, 3, 20, 12, 0, 0);
+        Carbon::setTestNow($now);
+
+        $response = $this->withSession(['_id' => 'session-1'])
+            ->postJson('/api/v1/longest-word', [
+                'word' => 'extraordinary'
+            ]);
+
+        $response->assertStatus(200);
+        $firstSessionId = LongestWord::first()->session_id;
+
+        // Second submission 23 hours later (should reuse session)
+        Carbon::setTestNow($now->copy()->addHours(23));
+
+        $response = $this->withSession(['_id' => 'session-2'])
+            ->postJson('/api/v1/longest-word', [
+                'word' => 'supercalifragilistic'
+            ]);
+
+        $response->assertStatus(200);
+        $secondSessionId = LongestWord::latest()->first()->session_id;
+
+        // Verify same session was used
+        $this->assertEquals($firstSessionId, $secondSessionId);
+    }
+
+    public function test_creates_new_session_after_24_hours()
+    {
+        $playerId = 'player-123';
+        $this->playerIdentityService
+            ->shouldReceive('findOrGeneratePlayerId')
+            ->twice()
+            ->withAnyArgs()
+            ->andReturn($playerId);
+
+        // First submission at current time
+        $now = Carbon::create(2024, 3, 20, 12, 0, 0);
+        Carbon::setTestNow($now);
+
+        $response = $this->withSession(['_id' => 'session-1'])
+            ->postJson('/api/v1/longest-word', [
+                'word' => 'extraordinary'
+            ]);
+
+        $response->assertStatus(200);
+        $firstSessionId = LongestWord::first()->session_id;
+
+        // Second submission 25 hours later (should create new session)
+        Carbon::setTestNow($now->copy()->addHours(25));
+
+        $response = $this->withSession(['_id' => 'session-2'])
+            ->postJson('/api/v1/longest-word', [
+                'word' => 'supercalifragilistic'
+            ]);
+
+        $response->assertStatus(200);
+        $secondSessionId = LongestWord::latest()->first()->session_id;
+
+        // Verify different sessions were used
+        $this->assertNotEquals($firstSessionId, $secondSessionId);
+    }
+
     protected function tearDown(): void
     {
         parent::tearDown();
         Mockery::close();
+        Carbon::setTestNow(); // Reset the mock time
     }
 } 

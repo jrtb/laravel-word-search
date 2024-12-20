@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "7e9c2f3a-5b4d-4c1a-8f3e-1d2e3f4a5b6c",
 		"name": "Word Search API",
-		"description": "API collection for the Laravel Word Search application. This collection includes endpoints for pattern search, frequency search, longest word tracking, and session/streak tracking. Player identity is maintained across sessions using browser fingerprinting based on User-Agent, Accept-Language headers, and IP address.",
+		"description": "API collection for the Laravel Word Search application. This collection includes endpoints for pattern search, frequency search, longest word tracking, and session/streak tracking. Player identity is maintained across sessions using browser fingerprinting based on User-Agent, Accept-Language headers, and IP address. Sessions are maintained for 24 hours from last activity.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -29,8 +29,8 @@
 							"raw": "{\n    \"query\": \"example\",\n    \"list\": \"both\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/search",
-							"host": ["{{base_url}}"],
+							"raw": "{{baseUrl}}/search",
+							"host": ["{{baseUrl}}"],
 							"path": ["search"]
 						},
 						"description": "Search through word lists using pattern matching."
@@ -55,8 +55,8 @@
 							"raw": "{\n    \"frequency\": 0.0000009\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/search-frequency",
-							"host": ["{{base_url}}"],
+							"raw": "{{baseUrl}}/search-frequency",
+							"host": ["{{baseUrl}}"],
 							"path": ["search-frequency"]
 						},
 						"description": "Search for words based on their frequency of usage."
@@ -66,7 +66,7 @@
 		},
 		{
 			"name": "External APIs",
-			"description": "Public APIs for longest word tracking and session management. No CSRF token required. Player identity is maintained across sessions using browser fingerprinting (User-Agent, Accept-Language headers, and IP address).",
+			"description": "Public APIs for longest word tracking and session management. No CSRF token required. Player identity is maintained across sessions using browser fingerprinting. Sessions remain active for 24 hours from last activity.",
 			"item": [
 				{
 					"name": "Submit Word",
@@ -93,11 +93,11 @@
 							"raw": "{\n    \"word\": \"extraordinary\"\n}"
 						},
 						"url": {
-							"raw": "{{base_url}}/api/v1/longest-word",
-							"host": ["{{base_url}}"],
+							"raw": "{{baseUrl}}/api/v1/longest-word",
+							"host": ["{{baseUrl}}"],
 							"path": ["api", "v1", "longest-word"]
 						},
-						"description": "Submit a word to track as potentially the longest word for the current player. Player identity is maintained across sessions using browser fingerprinting based on User-Agent, Accept-Language headers, and IP address."
+						"description": "Submit a word to track as potentially the longest word for the current player. Player identity is maintained across sessions using browser fingerprinting. Sessions remain active for 24 hours from last activity."
 					},
 					"response": [
 						{
@@ -110,7 +110,7 @@
 									"raw": "{\n    \"word\": \"extraordinary\"\n}"
 								},
 								"url": {
-									"raw": "{{base_url}}/api/v1/longest-word"
+									"raw": "{{baseUrl}}/api/v1/longest-word"
 								}
 							},
 							"status": "OK",
@@ -122,7 +122,7 @@
 									"value": "application/json"
 								}
 							],
-							"body": "{\n    \"success\": true,\n    \"is_longest\": true,\n    \"submitted_word\": \"extraordinary\"\n}"
+							"body": "{\n    \"success\": true,\n    \"is_longest\": true,\n    \"submitted_word\": \"extraordinary\",\n    \"player_id\": \"8f7d9c2e\",\n    \"session_id\": \"sess_123abc\"\n}"
 						}
 					]
 				},
@@ -143,11 +143,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/v1/longest-word",
-							"host": ["{{base_url}}"],
+							"raw": "{{baseUrl}}/api/v1/longest-word",
+							"host": ["{{baseUrl}}"],
 							"path": ["api", "v1", "longest-word"]
 						},
-						"description": "Get the current player's longest word. Results are consistent across sessions due to browser fingerprinting based on User-Agent, Accept-Language headers, and IP address."
+						"description": "Get the current player's longest word. Results are consistent across sessions due to browser fingerprinting. Session information is included in the response."
 					},
 					"response": [
 						{
@@ -156,7 +156,7 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{base_url}}/api/v1/longest-word"
+									"raw": "{{baseUrl}}/api/v1/longest-word"
 								}
 							},
 							"status": "OK",
@@ -168,7 +168,7 @@
 									"value": "application/json"
 								}
 							],
-							"body": "{\n    \"success\": true,\n    \"longest_word\": \"extraordinary\",\n    \"length\": 13,\n    \"player_id\": \"8f7d9c2e\"\n}"
+							"body": "{\n    \"success\": true,\n    \"longest_word\": \"extraordinary\",\n    \"length\": 13,\n    \"player_id\": \"8f7d9c2e\",\n    \"session_id\": \"sess_123abc\"\n}"
 						}
 					]
 				},
@@ -189,11 +189,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{base_url}}/api/v1/longest-word/top",
-							"host": ["{{base_url}}"],
+							"raw": "{{baseUrl}}/api/v1/longest-word/top",
+							"host": ["{{baseUrl}}"],
 							"path": ["api", "v1", "longest-word", "top"]
 						},
-						"description": "Get the top 10 longest words across all players. Player IDs are SHA-256 hashes of browser fingerprints, remaining consistent across sessions."
+						"description": "Get the top longest words across all players. Player IDs are SHA-256 hashes of browser fingerprints, remaining consistent across sessions. Session information is included for each word."
 					},
 					"response": [
 						{
@@ -202,7 +202,7 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{base_url}}/api/v1/longest-word/top"
+									"raw": "{{baseUrl}}/api/v1/longest-word/top"
 								}
 							},
 							"status": "OK",
@@ -214,99 +214,7 @@
 									"value": "application/json"
 								}
 							],
-							"body": "{\n    \"success\": true,\n    \"words\": [\n        {\n            \"word\": \"supercalifragilistic\",\n            \"player_id\": \"8f7d9c2e\",\n            \"length\": 20,\n            \"submitted_at\": \"2024-03-15T10:30:00Z\"\n        }\n    ]\n}"
-						}
-					]
-				},
-				{
-					"name": "Record Session",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "User-Agent",
-								"value": "PostmanRuntime/7.32.3",
-								"description": "Used for player identification"
-							},
-							{
-								"key": "Accept-Language",
-								"value": "en-US",
-								"description": "Used for player identification"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/api/v1/session",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "session"]
-						},
-						"description": "Record a player session for streak tracking. Multiple sessions in the same day count as one day for streak purposes. Player identity is maintained across sessions using browser fingerprinting."
-					},
-					"response": [
-						{
-							"name": "Success Response",
-							"originalRequest": {
-								"method": "POST",
-								"header": [],
-								"url": {
-									"raw": "{{base_url}}/api/v1/session"
-								}
-							},
-							"status": "OK",
-							"code": 200,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								}
-							],
-							"body": "{\n    \"success\": true,\n    \"current_streak\": 3,\n    \"highest_streak\": 5,\n    \"last_session_date\": \"2024-03-19\"\n}"
-						}
-					]
-				},
-				{
-					"name": "Get Streak Info",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "User-Agent",
-								"value": "PostmanRuntime/7.32.3",
-								"description": "Used for player identification"
-							},
-							{
-								"key": "Accept-Language",
-								"value": "en-US",
-								"description": "Used for player identification"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/api/v1/session/streak",
-							"host": ["{{base_url}}"],
-							"path": ["api", "v1", "session", "streak"]
-						},
-						"description": "Get the current player's streak information. Returns current streak (0 if broken), highest streak ever achieved, and the date of the last session."
-					},
-					"response": [
-						{
-							"name": "Success Response",
-							"originalRequest": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "{{base_url}}/api/v1/session/streak"
-								}
-							},
-							"status": "OK",
-							"code": 200,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								}
-							],
-							"body": "{\n    \"success\": true,\n    \"current_streak\": 3,\n    \"highest_streak\": 5,\n    \"last_session_date\": \"2024-03-19\"\n}"
+							"body": "{\n    \"success\": true,\n    \"words\": [\n        {\n            \"word\": \"supercalifragilistic\",\n            \"player_id\": \"8f7d9c2e\",\n            \"length\": 20,\n            \"submitted_at\": \"2024-03-15T10:30:00Z\",\n            \"session_id\": \"sess_123abc\"\n        }\n    ]\n}"
 						}
 					]
 				}
@@ -455,7 +363,7 @@
 	],
 	"variable": [
 		{
-			"key": "base_url",
+			"key": "baseUrl",
 			"value": "http://localhost:8000",
 			"type": "string"
 		}

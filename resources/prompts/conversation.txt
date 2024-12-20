@@ -78,6 +78,11 @@ Please consider the following context when providing assistance:
      - Multiple tabs/windows
 
 6. Session Tracking System:
+   - 24-hour session duration:
+     - Sessions remain active for 24 hours from last activity
+     - New sessions created after 24 hours of inactivity
+     - Automatic session management
+     - Session reuse within 24-hour window
    - Independent from word submissions
    - Records daily player activity
    - Maintains streak information:
@@ -86,6 +91,7 @@ Please consider the following context when providing assistance:
      - Preserves highest achieved streak
    - Handles multiple sessions per day
    - Provides streak statistics via API
+   - Session data helps analyze engagement patterns
 
 7. Testing:
    - Feature tests for all API endpoints
@@ -149,6 +155,9 @@ When handling database operations:
 - Implement proper error handling for database operations
 - Use transactions for critical data operations
 - Log significant database changes
+- Consider session duration when querying historical data
+- Handle session transitions gracefully
+- Maintain data consistency across session changes
 
 Before providing assistance:
 1. Verify compatibility with Laravel 11's architecture and versions specified above

@@ -9,9 +9,14 @@ class LongestWordTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+    }
+
     public function test_can_store_and_update_session_id(): void
     {
-        // First request - establish player identity
+        // First request - establish player identity with a longer word
         $headers = [
             'User-Agent' => 'Test Browser 1.0',
             'Accept-Language' => 'en-US'
@@ -19,7 +24,7 @@ class LongestWordTest extends TestCase
         
         $response = $this->withHeaders($headers)
             ->postJson('/api/v1/longest-word', [
-                'word' => 'testing'
+                'word' => 'extraordinary'
             ]);
 
         $response->assertStatus(200);
@@ -32,24 +37,31 @@ class LongestWordTest extends TestCase
         // Verify session was stored
         $this->assertDatabaseHas('longest_words', [
             'player_id' => $playerId,
-            'word' => 'testing'
+            'word' => 'extraordinary'
         ]);
 
-        // Second request - should maintain player identity
+        // Second request - should not store shorter word
         $response = $this->withHeaders($headers)
             ->postJson('/api/v1/longest-word', [
                 'word' => 'testing'
             ]);
 
-        $updatedRecord = \App\Models\LongestWord::first();
+        $response->assertStatus(200);
         
         // Verify:
         // 1. Player ID remains the same (identity preserved)
         // 2. Session handling is working (session ID exists)
-        // 3. Word remains the same
+        // 3. Word remains the same (shorter word not stored)
+        $updatedRecord = \App\Models\LongestWord::first();
         $this->assertEquals($playerId, $updatedRecord->player_id);
         $this->assertNotNull($updatedRecord->session_id);
-        $this->assertEquals('testing', $updatedRecord->word);
+        $this->assertEquals('extraordinary', $updatedRecord->word);
+
+        // Verify shorter word was not stored
+        $this->assertDatabaseMissing('longest_words', [
+            'player_id' => $playerId,
+            'word' => 'testing'
+        ]);
     }
 
     public function test_api_returns_json_response(): void

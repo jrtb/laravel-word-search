@@ -52,6 +52,7 @@ class LongestWord extends Model
     public function scopePlayerLongest($query, string $playerId)
     {
         return $query->where('player_id', $playerId)
-            ->orderByRaw('LENGTH(word) DESC');
+            ->orderByRaw('LENGTH(word) DESC')
+            ->limit(1);
     }
 }
