@@ -14,7 +14,6 @@ class PlaySession extends Model
     protected $fillable = [
         'player_id',
         'omnigram',
-        'score',
         'started_at',
         'ended_at',
     ];
@@ -22,7 +21,6 @@ class PlaySession extends Model
     protected $casts = [
         'started_at' => 'datetime',
         'ended_at' => 'datetime',
-        'score' => 'integer',
     ];
 
     public function words(): HasMany
@@ -71,24 +69,18 @@ class PlaySession extends Model
         return static::create([
             'player_id' => $playerId,
             'omnigram' => $omnigram,
-            'score' => 0,
             'started_at' => $startTime,
         ]);
     }
 
-    public function addWord(string $word, int $points): PlaySessionWord
+    public function addWord(string $word): PlaySessionWord
     {
         if (!$this->isActive()) {
             throw new \RuntimeException('Cannot add words to an inactive session');
         }
 
-        $sessionWord = $this->words()->create([
+        return $this->words()->create([
             'word' => $word,
-            'points' => $points,
         ]);
-
-        $this->increment('score', $points);
-
-        return $sessionWord;
     }
 } 

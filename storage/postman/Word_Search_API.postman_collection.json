@@ -2,7 +2,7 @@
 	"info": {
 		"_postman_id": "7e9c2f3a-5b4d-4c1a-8f3e-1d2e3f4a5b6c",
 		"name": "Word Search API",
-		"description": "API collection for the Laravel Word Search application. This collection includes endpoints for pattern search, frequency search, longest word tracking, and session/streak tracking. Player identity is maintained across sessions using browser fingerprinting based on User-Agent, Accept-Language headers, and IP address. Sessions are maintained for 24 hours from last activity.",
+		"description": "API collection for the Laravel Word Search application. This collection includes endpoints for pattern search, frequency search, and word tracking within 24-hour sessions.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
@@ -65,9 +65,55 @@
 			]
 		},
 		{
-			"name": "External APIs",
-			"description": "Public APIs for longest word tracking and session management. No CSRF token required. Player identity is maintained across sessions using browser fingerprinting. Sessions remain active for 24 hours from last activity.",
+			"name": "Play Sessions",
+			"description": "Endpoints for managing 24-hour play sessions and word submissions.",
 			"item": [
+				{
+					"name": "Get Current Session",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "User-Agent",
+								"value": "PostmanRuntime/7.32.3",
+								"description": "Used for player identification"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en-US",
+								"description": "Used for player identification"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/play-session/current",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "play-session", "current"]
+						},
+						"description": "Get the current play session for the player, creating a new one if needed. Sessions last 24 hours."
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/play-session/current"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"success\": true,\n    \"session_id\": 123,\n    \"omnigram\": \"STARLIGHT\",\n    \"started_at\": \"2024-03-20T00:00:00Z\",\n    \"time_remaining\": 43200,\n    \"words\": [\n        {\n            \"word\": \"STAR\"\n        }\n    ]\n}"
+						}
+					]
+				},
 				{
 					"name": "Submit Word",
 					"request": {
@@ -90,14 +136,14 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"word\": \"extraordinary\"\n}"
+							"raw": "{\n    \"word\": \"STAR\"\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/longest-word",
+							"raw": "{{baseUrl}}/api/v1/play-session/submit-word",
 							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "longest-word"]
+							"path": ["api", "v1", "play-session", "submit-word"]
 						},
-						"description": "Submit a word to track as potentially the longest word for the current player. Player identity is maintained across sessions using browser fingerprinting. Sessions remain active for 24 hours from last activity."
+						"description": "Submit a word found in the current play session."
 					},
 					"response": [
 						{
@@ -107,10 +153,10 @@
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"word\": \"extraordinary\"\n}"
+									"raw": "{\n    \"word\": \"STAR\"\n}"
 								},
 								"url": {
-									"raw": "{{baseUrl}}/api/v1/longest-word"
+									"raw": "{{baseUrl}}/api/v1/play-session/submit-word"
 								}
 							},
 							"status": "OK",
@@ -122,12 +168,12 @@
 									"value": "application/json"
 								}
 							],
-							"body": "{\n    \"success\": true,\n    \"is_longest\": true,\n    \"submitted_word\": \"extraordinary\",\n    \"player_id\": \"8f7d9c2e\",\n    \"session_id\": \"sess_123abc\"\n}"
+							"body": "{\n    \"success\": true,\n    \"word\": \"STAR\"\n}"
 						}
 					]
 				},
 				{
-					"name": "Get Longest Word",
+					"name": "Get Top Word Counts",
 					"request": {
 						"method": "GET",
 						"header": [
@@ -143,11 +189,11 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/longest-word",
+							"raw": "{{baseUrl}}/api/v1/play-session/top-scores",
 							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "longest-word"]
+							"path": ["api", "v1", "play-session", "top-scores"]
 						},
-						"description": "Get the current player's longest word. Results are consistent across sessions due to browser fingerprinting. Session information is included in the response."
+						"description": "Get the top word counts from completed play sessions, ordered by number of words found."
 					},
 					"response": [
 						{
@@ -156,7 +202,7 @@
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{baseUrl}}/api/v1/longest-word"
+									"raw": "{{baseUrl}}/api/v1/play-session/top-scores"
 								}
 							},
 							"status": "OK",
@@ -168,193 +214,7 @@
 									"value": "application/json"
 								}
 							],
-							"body": "{\n    \"success\": true,\n    \"longest_word\": \"extraordinary\",\n    \"length\": 13,\n    \"player_id\": \"8f7d9c2e\",\n    \"session_id\": \"sess_123abc\"\n}"
-						}
-					]
-				},
-				{
-					"name": "Get Top Words",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "User-Agent",
-								"value": "PostmanRuntime/7.32.3",
-								"description": "Used for player identification"
-							},
-							{
-								"key": "Accept-Language",
-								"value": "en-US",
-								"description": "Used for player identification"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/longest-word/top",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "longest-word", "top"]
-						},
-						"description": "Get the top longest words across all players. Player IDs are SHA-256 hashes of browser fingerprints, remaining consistent across sessions. Session information is included for each word."
-					},
-					"response": [
-						{
-							"name": "Success Response",
-							"originalRequest": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "{{baseUrl}}/api/v1/longest-word/top"
-								}
-							},
-							"status": "OK",
-							"code": 200,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								}
-							],
-							"body": "{\n    \"success\": true,\n    \"words\": [\n        {\n            \"word\": \"supercalifragilistic\",\n            \"player_id\": \"8f7d9c2e\",\n            \"length\": 20,\n            \"submitted_at\": \"2024-03-15T10:30:00Z\",\n            \"session_id\": \"sess_123abc\"\n        }\n    ]\n}"
-						}
-					]
-				}
-			]
-		},
-		{
-			"name": "Game Word Records",
-			"description": "Endpoints for managing game word count records",
-			"item": [
-				{
-					"name": "Get Highest Word Count",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/game-words/highest",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "game-words", "highest"]
-						},
-						"description": "Returns the highest number of words found in a single game for the current player"
-					},
-					"response": [
-						{
-							"name": "Successful Response",
-							"originalRequest": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "{{baseUrl}}/api/v1/game-words/highest"
-								}
-							},
-							"status": "OK",
-							"code": 200,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								}
-							],
-							"body": {
-								"success": true,
-								"highest_word_count": 42,
-								"player_id": "8f7d9c2e"
-							}
-						}
-					]
-				},
-				{
-					"name": "Update Word Count",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"word_count\": 15\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/game-words/update",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "game-words", "update"]
-						},
-						"description": "Updates the word count for the current game and updates the highest count if exceeded"
-					},
-					"response": [
-						{
-							"name": "Successful Response",
-							"originalRequest": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{\n    \"word_count\": 15\n}"
-								},
-								"url": {
-									"raw": "{{baseUrl}}/api/v1/game-words/update"
-								}
-							},
-							"status": "OK",
-							"code": 200,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								}
-							],
-							"body": {
-								"success": true,
-								"word_count": 15,
-								"highest_word_count": 42,
-								"is_new_record": false,
-								"player_id": "8f7d9c2e"
-							}
-						},
-						{
-							"name": "Validation Error",
-							"originalRequest": {
-								"method": "POST",
-								"header": [
-									{
-										"key": "Content-Type",
-										"value": "application/json"
-									}
-								],
-								"body": {
-									"mode": "raw",
-									"raw": "{}"
-								},
-								"url": {
-									"raw": "{{baseUrl}}/api/v1/game-words/update"
-								}
-							},
-							"status": "Unprocessable Entity",
-							"code": 422,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								}
-							],
-							"body": {
-								"success": false,
-								"errors": {
-									"word_count": [
-										"The word count field is required."
-									]
-								}
-							}
+							"body": "{\n    \"success\": true,\n    \"scores\": [\n        {\n            \"player_id\": \"8f7d9c2e\",\n            \"word_count\": 42,\n            \"date\": \"2024-03-15\"\n        }\n    ]\n}"
 						}
 					]
 				}

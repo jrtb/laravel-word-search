@@ -12,7 +12,6 @@ return new class extends Migration
             $table->id();
             $table->string('player_id');
             $table->string('omnigram');
-            $table->integer('score')->default(0);
             $table->timestamp('started_at');
             $table->timestamp('ended_at')->nullable();
             $table->timestamps();
@@ -25,7 +24,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('play_session_id')->constrained()->onDelete('cascade');
             $table->string('word');
-            $table->integer('points');
             $table->timestamps();
 
             $table->unique(['play_session_id', 'word']);

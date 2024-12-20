@@ -12,7 +12,7 @@ use OpenApi\Annotations as OA;
 /**
  * @OA\Tag(
  *     name="Play Sessions",
- *     description="Endpoints for managing 24-hour play sessions and word submissions"
+ *     description="Endpoints for managing 24-hour play sessions and word submissions."
  * )
  */
 class PlaySessionController extends Controller
@@ -33,7 +33,7 @@ class PlaySessionController extends Controller
      *     path="/api/v1/play-session/current",
      *     operationId="getCurrentSession",
      *     summary="Get current play session",
-     *     description="Get the current play session for the player, creating a new one if needed",
+     *     description="Get the current play session for the player, creating a new one if needed. Sessions last 24 hours from creation.",
      *     tags={"Play Sessions"},
      *     @OA\Response(
      *         response=200,
@@ -42,12 +42,10 @@ class PlaySessionController extends Controller
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="session_id", type="integer", example=1),
      *             @OA\Property(property="omnigram", type="string", example="STARLIGHT"),
-     *             @OA\Property(property="score", type="integer", example=42),
      *             @OA\Property(property="started_at", type="string", format="date-time"),
      *             @OA\Property(property="time_remaining", type="integer", description="Seconds remaining in session"),
      *             @OA\Property(property="words", type="array", @OA\Items(
-     *                 @OA\Property(property="word", type="string"),
-     *                 @OA\Property(property="points", type="integer")
+     *                 @OA\Property(property="word", type="string", example="STAR")
      *             ))
      *         )
      *     )
@@ -68,8 +66,8 @@ class PlaySessionController extends Controller
      * @OA\Post(
      *     path="/api/v1/play-session/submit-word",
      *     operationId="submitWord",
-     *     summary="Submit a word for the current session",
-     *     description="Submit a word to be scored in the current play session",
+     *     summary="Submit a word",
+     *     description="Submit a word found in the current play session.",
      *     tags={"Play Sessions"},
      *     @OA\RequestBody(
      *         required=true,
@@ -83,21 +81,27 @@ class PlaySessionController extends Controller
      *         description="Word submission result",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="word", type="string", example="STAR"),
-     *             @OA\Property(property="points", type="integer", example=4),
-     *             @OA\Property(property="total_score", type="integer", example=46)
+     *             @OA\Property(property="word", type="string", example="STAR")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Invalid request - word parameter missing or invalid",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="error", type="string", example="The word field is required")
      *         )
      *     )
      * )
      */
     public function submitWord(Request $request): JsonResponse
     {
-        $request->validate([
-            'word' => 'required|string|min:1',
+        $validated = $request->validate([
+            'word' => ['required', 'string', 'min:1']
         ]);
 
         $playerId = $this->playerIdentityService->findOrGeneratePlayerId($request);
-        $result = $this->playSessionService->submitWord($playerId, $request->input('word'));
+        $result = $this->playSessionService->submitWord($playerId, $validated['word']);
 
         return response()->json($result);
     }
@@ -106,17 +110,16 @@ class PlaySessionController extends Controller
      * @OA\Get(
      *     path="/api/v1/play-session/top-scores",
      *     operationId="getTopScores",
-     *     summary="Get top scores",
-     *     description="Get the top scores from completed play sessions",
+     *     summary="Get top word counts",
+     *     description="Get the top word counts from completed play sessions, ordered by number of words found.",
      *     tags={"Play Sessions"},
      *     @OA\Response(
      *         response=200,
-     *         description="Top scores list",
+     *         description="Top word counts list",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="scores", type="array", @OA\Items(
      *                 @OA\Property(property="player_id", type="string"),
-     *                 @OA\Property(property="score", type="integer"),
      *                 @OA\Property(property="word_count", type="integer"),
      *                 @OA\Property(property="date", type="string", format="date")
      *             ))

@@ -13,11 +13,6 @@ class PlaySessionWord extends Model
     protected $fillable = [
         'play_session_id',
         'word',
-        'points',
-    ];
-
-    protected $casts = [
-        'points' => 'integer',
     ];
 
     public function playSession(): BelongsTo
