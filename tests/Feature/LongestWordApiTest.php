@@ -34,7 +34,7 @@ class LongestWordApiTest extends TestCase
             ->andReturn($playerId);
 
         $response = $this->withSession(['_id' => 'session-1'])
-            ->postJson('/api/v1/longest-word', [
+            ->postJson('/api/v1/play-session/submit-word', [
                 'word' => 'extraordinary'
             ]);
 
@@ -42,8 +42,9 @@ class LongestWordApiTest extends TestCase
             ->assertJson([
                 'success' => true,
                 'is_longest' => true,
-                'submitted_word' => 'extraordinary',
-                'player_id' => $playerId
+                'word' => 'extraordinary',
+                'longest_word' => 'extraordinary',
+                'longest_word_length' => 13
             ]);
 
         $this->assertDatabaseHas('longest_words', [
@@ -63,26 +64,28 @@ class LongestWordApiTest extends TestCase
 
         // First session - longer word
         $response = $this->withSession(['_id' => 'session-1'])
-            ->postJson('/api/v1/longest-word', [
+            ->postJson('/api/v1/play-session/submit-word', [
                 'word' => 'extraordinary'
             ]);
 
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
-                'is_longest' => true
+                'is_longest' => true,
+                'longest_word' => 'extraordinary'
             ]);
 
-        // Second session - shorter word (should not be stored)
+        // Second session - shorter word (should not be stored as longest)
         $response = $this->withSession(['_id' => 'session-2'])
-            ->postJson('/api/v1/longest-word', [
+            ->postJson('/api/v1/play-session/submit-word', [
                 'word' => 'short'
             ]);
 
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
-                'is_longest' => false
+                'is_longest' => false,
+                'longest_word' => 'extraordinary'
             ]);
 
         // Verify the longer word is stored
@@ -91,7 +94,7 @@ class LongestWordApiTest extends TestCase
             'player_id' => $playerId
         ]);
 
-        // Verify the shorter word was not stored
+        // Verify the shorter word was not stored in longest_words
         $this->assertDatabaseMissing('longest_words', [
             'word' => 'short',
             'player_id' => $playerId
@@ -111,7 +114,7 @@ class LongestWordApiTest extends TestCase
 
         // First player submits a word
         $response = $this->withSession(['_id' => 'session-1'])
-            ->postJson('/api/v1/longest-word', [
+            ->postJson('/api/v1/play-session/submit-word', [
                 'word' => 'extraordinary'
             ]);
 
@@ -125,7 +128,7 @@ class LongestWordApiTest extends TestCase
 
         // Second player submits a word
         $response = $this->withSession(['_id' => 'session-2'])
-            ->postJson('/api/v1/longest-word', [
+            ->postJson('/api/v1/play-session/submit-word', [
                 'word' => 'short'
             ]);
 
@@ -161,16 +164,18 @@ class LongestWordApiTest extends TestCase
             ->withAnyArgs()
             ->andReturn($playerId);
 
-        // Now get the word
+        // Now get the word by submitting a shorter one
         $response = $this->withSession(['_id' => 'session-1'])
-            ->getJson('/api/v1/longest-word');
+            ->postJson('/api/v1/play-session/submit-word', [
+                'word' => 'short'
+            ]);
 
         $response->assertStatus(200)
             ->assertJson([
                 'success' => true,
+                'is_longest' => false,
                 'longest_word' => 'extraordinary',
-                'length' => 13,
-                'player_id' => $playerId
+                'longest_word_length' => 13
             ]);
     }
 
@@ -215,7 +220,7 @@ class LongestWordApiTest extends TestCase
     public function test_invalid_word_submission()
     {
         $response = $this->withSession(['_id' => 'session-1'])
-            ->postJson('/api/v1/longest-word', [
+            ->postJson('/api/v1/play-session/submit-word', [
                 'word' => '' // Empty word
             ]);
 
@@ -236,7 +241,7 @@ class LongestWordApiTest extends TestCase
         Carbon::setTestNow($now);
 
         $response = $this->withSession(['_id' => 'session-1'])
-            ->postJson('/api/v1/longest-word', [
+            ->postJson('/api/v1/play-session/submit-word', [
                 'word' => 'extraordinary'
             ]);
 
@@ -247,7 +252,7 @@ class LongestWordApiTest extends TestCase
         Carbon::setTestNow($now->copy()->addHours(23));
 
         $response = $this->withSession(['_id' => 'session-2'])
-            ->postJson('/api/v1/longest-word', [
+            ->postJson('/api/v1/play-session/submit-word', [
                 'word' => 'supercalifragilistic'
             ]);
 
@@ -272,7 +277,7 @@ class LongestWordApiTest extends TestCase
         Carbon::setTestNow($now);
 
         $response = $this->withSession(['_id' => 'session-1'])
-            ->postJson('/api/v1/longest-word', [
+            ->postJson('/api/v1/play-session/submit-word', [
                 'word' => 'extraordinary'
             ]);
 
@@ -283,7 +288,7 @@ class LongestWordApiTest extends TestCase
         Carbon::setTestNow($now->copy()->addHours(25));
 
         $response = $this->withSession(['_id' => 'session-2'])
-            ->postJson('/api/v1/longest-word', [
+            ->postJson('/api/v1/play-session/submit-word', [
                 'word' => 'supercalifragilistic'
             ]);
 

@@ -187,7 +187,7 @@
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "v1", "play-session", "submit-word"]
 						},
-						"description": "Submit a word found in the current play session. The word must be formed from letters in the current session's omnigram. Creates a new session if needed."
+						"description": "Submit a word found in the current play session. The word must be formed from letters in the current session's omnigram. Creates a new session if needed. Also checks and updates the player's longest word record."
 					},
 					"response": [
 						{
@@ -212,7 +212,7 @@
 									"value": "application/json"
 								}
 							],
-							"body": "{\n    \"success\": true,\n    \"word\": \"STAR\"\n}"
+							"body": "{\n    \"success\": true,\n    \"word\": \"STAR\",\n    \"is_longest\": true,\n    \"longest_word\": \"STAR\",\n    \"longest_word_length\": 4\n}"
 						},
 						{
 							"name": "Validation Error",

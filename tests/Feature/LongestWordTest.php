@@ -23,7 +23,7 @@ class LongestWordTest extends TestCase
         ];
         
         $response = $this->withHeaders($headers)
-            ->postJson('/api/v1/longest-word', [
+            ->postJson('/api/v1/play-session/submit-word', [
                 'word' => 'extraordinary'
             ]);
 
@@ -42,11 +42,16 @@ class LongestWordTest extends TestCase
 
         // Second request - should not store shorter word
         $response = $this->withHeaders($headers)
-            ->postJson('/api/v1/longest-word', [
+            ->postJson('/api/v1/play-session/submit-word', [
                 'word' => 'testing'
             ]);
 
-        $response->assertStatus(200);
+        $response->assertStatus(200)
+            ->assertJson([
+                'success' => true,
+                'is_longest' => false,
+                'longest_word' => 'extraordinary'
+            ]);
         
         // Verify:
         // 1. Player ID remains the same (identity preserved)
@@ -66,16 +71,20 @@ class LongestWordTest extends TestCase
 
     public function test_api_returns_json_response(): void
     {
-        $response = $this->getJson('/api/v1/longest-word');
+        // Submit a word to get the longest word info
+        $response = $this->postJson('/api/v1/play-session/submit-word', [
+            'word' => 'test'
+        ]);
         
         $response
             ->assertStatus(200)
             ->assertHeader('Content-Type', 'application/json')
             ->assertJsonStructure([
                 'success',
+                'word',
+                'is_longest',
                 'longest_word',
-                'length',
-                'player_id'
+                'longest_word_length'
             ]);
     }
 

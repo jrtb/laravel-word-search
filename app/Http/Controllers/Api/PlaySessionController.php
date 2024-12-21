@@ -67,7 +67,7 @@ class PlaySessionController extends Controller
      *     path="/api/v1/play-session/submit-word",
      *     operationId="submitWord",
      *     summary="Submit a word to the current play session",
-     *     description="Submit a word found in the current play session. Creates a new session if needed. Validates word against current session's omnigram.",
+     *     description="Submit a word found in the current play session. Creates a new session if needed. Validates word against current session's omnigram. Also checks and updates the player's longest word record.",
      *     tags={"Play Sessions"},
      *     @OA\RequestBody(
      *         required=true,
@@ -81,7 +81,10 @@ class PlaySessionController extends Controller
      *         description="Word submission result",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="word", type="string", example="STAR", description="The submitted word if valid")
+     *             @OA\Property(property="word", type="string", example="STAR", description="The submitted word if valid"),
+     *             @OA\Property(property="is_longest", type="boolean", example=true, description="Whether this word became the player's new longest word"),
+     *             @OA\Property(property="longest_word", type="string", example="STARLIGHT", description="The player's current longest word"),
+     *             @OA\Property(property="longest_word_length", type="integer", example=9, description="Length of the player's longest word")
      *         )
      *     ),
      *     @OA\Response(
@@ -103,7 +106,51 @@ class PlaySessionController extends Controller
         $playerId = $this->playerIdentityService->findOrGeneratePlayerId($request);
         $result = $this->playSessionService->submitWord($playerId, $validated['word']);
 
-        return response()->json($result);
+        // Get the player's longest word information and its session
+        $longestWord = \App\Models\LongestWord::where('player_id', $playerId)
+            ->orderByRaw('LENGTH(word) DESC')
+            ->first();
+
+        // Check if this word is longer than the current longest
+        $word = $validated['word'];
+        $isLongest = !$longestWord || strlen($word) > strlen($longestWord->word);
+        
+        // Get the session ID - reuse the existing session if it's less than 24 hours old
+        $sessionId = $result['session_id'] ?? null;
+        if (!$sessionId && $longestWord && $longestWord->created_at->diffInHours(now()) < 24) {
+            $sessionId = $longestWord->session_id;
+        }
+        $sessionId = $sessionId ?? session()->getId();
+        
+        if ($isLongest) {
+            // If there's an existing record, delete it since we have a longer word
+            if ($longestWord) {
+                $longestWord->delete();
+            }
+            
+            // Create a new record for this word
+            \App\Models\LongestWord::create([
+                'word' => $word,
+                'session_id' => $sessionId,
+                'player_id' => $playerId
+            ]);
+            
+            // Update longest word info
+            $longestWord = \App\Models\LongestWord::where('player_id', $playerId)
+                ->orderByRaw('LENGTH(word) DESC')
+                ->first();
+        }
+
+        return response()->json([
+            'success' => true,
+            'word' => $word,
+            'is_longest' => $isLongest,
+            'longest_word' => $longestWord?->word ?? '',
+            'longest_word_length' => $longestWord ? strlen($longestWord->word) : 0,
+            'player_id' => $playerId,
+            'session_id' => $sessionId,
+            ...$result
+        ]);
     }
 
     /**
