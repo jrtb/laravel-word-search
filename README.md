@@ -109,6 +109,16 @@ A specialized web application for searching and analyzing words based on pattern
    - Note: Validates word against current session's omnigram
    - Note: Automatically creates new session if needed
    - Note: Adds word to current session's word list if valid
+   - Note: Updates player's longest word record if the submitted word is longer than their current record
+   - Note: The updated longest word will be reflected in subsequent `/api/v1/play-session/current` responses
+
+   **Error Response**
+   ```json
+   {
+       "success": false,
+       "error": "The word field is required"
+   }
+   ```
 
 ## Player Identity System
 
@@ -182,44 +192,9 @@ Note: These internal APIs use Laravel 11's web middleware group which includes C
 
 These endpoints are publicly accessible and explicitly exclude CSRF token requirements through Laravel 11's API middleware configuration:
 
-1. **Record Player Session**
-   ```http
-   POST /api/v1/session
-   ```
-   
-   **Response**
-   ```json
-   {
-       "success": true,
-       "current_streak": 3,
-       "highest_streak": 5,
-       "last_session_date": "2024-03-19"
-   }
-   ```
-   - `current_streak`: Number of consecutive days played
-   - `highest_streak`: Highest streak achieved by the player
-   - `last_session_date`: Date of the most recent session
-   - Note: Multiple sessions in the same day count as one day for streak purposes
+1. **Play Session Management**
 
-2. **Get Player Streak Info**
-   ```http
-   GET /api/v1/session/streak
-   ```
-   
-   **Response**
-   ```json
-   {
-       "success": true,
-       "current_streak": 3,
-       "highest_streak": 5,
-       "last_session_date": "2024-03-19"
-   }
-   ```
-   - `current_streak`: Current consecutive days streak (0 if broken)
-   - `highest_streak`: Highest streak ever achieved
-   - `last_session_date`: Date of the last recorded session
-
-3. **Get Current Play Session**
+   a. **Get Current Session**
    ```http
    GET /api/v1/play-session/current
    ```
@@ -250,7 +225,7 @@ These endpoints are publicly accessible and explicitly exclude CSRF token requir
    - `longest_word_length`: Length of player's longest word (0 if none)
    - Note: Creates a new session if none exists or if previous session expired
 
-4. **Submit Word to Play Session**
+   b. **Submit Word to Play Session**
    ```http
    POST /api/v1/play-session/submit-word
    Content-Type: application/json
@@ -271,6 +246,155 @@ These endpoints are publicly accessible and explicitly exclude CSRF token requir
    - Note: Validates word against current session's omnigram
    - Note: Automatically creates new session if needed
    - Note: Adds word to current session's word list if valid
+   - Note: Updates player's longest word record if the submitted word is longer than their current record
+   - Note: The updated longest word will be reflected in subsequent `/api/v1/play-session/current` responses
+
+   **Error Response**
+   ```json
+   {
+       "success": false,
+       "error": "The word field is required"
+   }
+   ```
+
+   c. **Get Top Play Session Scores**
+   ```http
+   GET /api/v1/play-session/top-scores
+   ```
+   
+   **Response**
+   ```json
+   {
+       "success": true,
+       "scores": [
+           {
+               "player_id": "8f7d9c2e",
+               "word_count": 42,
+               "date": "2024-03-15"
+           }
+       ]
+   }
+   ```
+   - `scores`: Array of top scoring sessions
+   - `player_id`: SHA-256 hash of browser fingerprint
+   - `word_count`: Number of words found in the session
+   - `date`: Date when the score was achieved
+
+2. **Player Session Management**
+
+   a. **Record Player Session**
+   ```http
+   POST /api/v1/session
+   ```
+   
+   **Response**
+   ```json
+   {
+       "success": true,
+       "current_streak": 3,
+       "highest_streak": 5,
+       "last_session_date": "2024-03-19"
+   }
+   ```
+   - `current_streak`: Number of consecutive days played
+   - `highest_streak`: Highest streak achieved by the player
+   - `last_session_date`: Date of the most recent session
+   - Note: Multiple sessions in the same day count as one day for streak purposes
+
+   b. **Get Player Streak Info**
+   ```http
+   GET /api/v1/session/streak
+   ```
+   
+   **Response**
+   ```json
+   {
+       "success": true,
+       "current_streak": 3,
+       "highest_streak": 5,
+       "last_session_date": "2024-03-19"
+   }
+   ```
+   - `current_streak`: Current consecutive days streak (0 if broken)
+   - `highest_streak`: Highest streak ever achieved
+   - `last_session_date`: Date of the last recorded session
+
+3. **Game Word Records**
+
+   a. **Get Highest Word Count**
+   ```http
+   GET /api/v1/game-words/highest
+   ```
+   
+   **Response**
+   ```json
+   {
+       "success": true,
+       "highest_word_count": 42,
+       "player_id": "8f7d9c2e"
+   }
+   ```
+   - `highest_word_count`: Player's highest word count across all games
+   - `player_id`: SHA-256 hash of browser fingerprint
+
+   b. **Get Top Word Counts**
+   ```http
+   GET /api/v1/game-words/top
+   ```
+   
+   **Response**
+   ```json
+   {
+       "success": true,
+       "records": [
+           {
+               "player_id": "8f7d9c2e",
+               "highest_word_count": 42,
+               "created_at": "2024-03-20T10:30:00Z"
+           }
+       ]
+   }
+   ```
+   - `records`: Array of top word count records
+   - `player_id`: SHA-256 hash of browser fingerprint
+   - `highest_word_count`: Highest number of words found in a game
+   - `created_at`: When the record was set
+
+   c. **Update Word Count**
+   ```http
+   POST /api/v1/game-words/update
+   Content-Type: application/json
+
+   {
+       "word_count": 15
+   }
+   ```
+   
+   **Response**
+   ```json
+   {
+       "success": true,
+       "word_count": 15,
+       "highest_word_count": 42,
+       "is_new_record": false,
+       "player_id": "8f7d9c2e"
+   }
+   ```
+   - `word_count`: The number of words found in the current game
+   - `highest_word_count`: Player's highest word count across all games
+   - `is_new_record`: Whether this submission set a new record
+   - `player_id`: SHA-256 hash of browser fingerprint
+   - Note: Automatically updates highest count if current count exceeds it
+
+   **Error Response**
+   ```json
+   {
+       "success": false,
+       "errors": {
+           "word_count": ["The word count field is required."]
+       }
+   }
+   ```
 
 #### Security Configuration
 - External APIs use Laravel 11's API middleware group (configured in `bootstrap/app.php`)
