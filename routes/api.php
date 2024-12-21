@@ -16,7 +16,6 @@ Route::prefix('v1')->group(function () {
     // Longest word endpoints
     Route::post('/longest-word', [LongestWordController::class, 'store']);
     Route::get('/longest-word', [LongestWordController::class, 'show']);
-    Route::get('/longest-word/top', [LongestWordController::class, 'topWords']);
 
     // Session tracking endpoints
     Route::post('/session', [PlayerSessionController::class, 'store']);

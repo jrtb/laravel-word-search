@@ -12,4 +12,5 @@ Route::middleware(['web'])->group(function () {
 
     // Player Stats Routes
     Route::get('/player-stats', [PlayerStatsController::class, 'index'])->name('player.stats');
+    Route::get('/longest-word/top', [App\Http\Controllers\Api\LongestWordController::class, 'topWords'])->name('longest-word.top');
 });

@@ -37,6 +37,81 @@ A specialized web application for searching and analyzing words based on pattern
   - Player-specific tracking using fingerprinting
   - RESTful endpoints for record management
 
+- **Update Game Word Count**
+   ```http
+   POST /api/v1/game-words/update
+   Content-Type: application/json
+
+   {
+       "word_count": 15
+   }
+   ```
+   
+   **Response**
+   ```json
+   {
+       "success": true,
+       "word_count": 15,
+       "highest_word_count": 42,
+       "is_new_record": false,
+       "player_id": "8f7d9c2e"
+   }
+   ```
+   - `word_count`: The number of words found in the current game
+   - `highest_word_count`: Player's highest word count across all games
+   - `is_new_record`: Whether this submission set a new record
+   - `player_id`: SHA-256 hash of browser fingerprint
+   - Note: Automatically updates highest count if current count exceeds it
+
+- **Get Current Play Session**
+   ```http
+   GET /api/v1/play-session/current
+   ```
+   
+   **Response**
+   ```json
+   {
+       "success": true,
+       "session_id": 123,
+       "omnigram": "STARLIGHT",
+       "started_at": "2024-03-20T00:00:00Z",
+       "time_remaining": 43200,
+       "words": [
+           {
+               "word": "STAR"
+           }
+       ]
+   }
+   ```
+   - `session_id`: Unique identifier for the current play session
+   - `omnigram`: The current word puzzle to solve
+   - `started_at`: When the session started (ISO 8601 format)
+   - `time_remaining`: Seconds remaining in the current session
+   - `words`: Array of words found in this session
+   - Note: Creates a new session if none exists or if previous session expired
+
+- **Submit Word to Play Session**
+   ```http
+   POST /api/v1/play-session/submit-word
+   Content-Type: application/json
+
+   {
+       "word": "STAR"
+   }
+   ```
+   
+   **Response**
+   ```json
+   {
+       "success": true,
+       "word": "STAR"
+   }
+   ```
+   - `word`: The submitted word if valid
+   - Note: Validates word against current session's omnigram
+   - Note: Automatically creates new session if needed
+   - Note: Adds word to current session's word list if valid
+
 ## Player Identity System
 
 The application uses a sophisticated browser fingerprint-based player identification system:
@@ -257,6 +332,55 @@ These endpoints are publicly accessible and explicitly exclude CSRF token requir
    - `is_new_record`: Whether this submission set a new record
    - `player_id`: SHA-256 hash of browser fingerprint
    - Note: Automatically updates highest count if current count exceeds it
+
+6. **Get Current Play Session**
+   ```http
+   GET /api/v1/play-session/current
+   ```
+   
+   **Response**
+   ```json
+   {
+       "success": true,
+       "session_id": 123,
+       "omnigram": "STARLIGHT",
+       "started_at": "2024-03-20T00:00:00Z",
+       "time_remaining": 43200,
+       "words": [
+           {
+               "word": "STAR"
+           }
+       ]
+   }
+   ```
+   - `session_id`: Unique identifier for the current play session
+   - `omnigram`: The current word puzzle to solve
+   - `started_at`: When the session started (ISO 8601 format)
+   - `time_remaining`: Seconds remaining in the current session
+   - `words`: Array of words found in this session
+   - Note: Creates a new session if none exists or if previous session expired
+
+7. **Submit Word to Play Session**
+   ```http
+   POST /api/v1/play-session/submit-word
+   Content-Type: application/json
+
+   {
+       "word": "STAR"
+   }
+   ```
+   
+   **Response**
+   ```json
+   {
+       "success": true,
+       "word": "STAR"
+   }
+   ```
+   - `word`: The submitted word if valid
+   - Note: Validates word against current session's omnigram
+   - Note: Automatically creates new session if needed
+   - Note: Adds word to current session's word list if valid
 
 #### Security Configuration
 - External APIs use Laravel 11's API middleware group (configured in `bootstrap/app.php`)

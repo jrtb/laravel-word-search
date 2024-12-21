@@ -154,31 +154,8 @@ class LongestWordController extends Controller
     }
 
     /**
-     * @OA\Get(
-     *     path="/api/v1/longest-word/top",
-     *     operationId="getTopWords",
-     *     summary="Get top longest words",
-     *     description="Returns a list of the longest words submitted by all players, sorted by length. Includes session information for each submission.",
-     *     tags={"Longest Word"},
-     *     @OA\Response(
-     *         response=200,
-     *         description="List of top words",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(
-     *                 property="words",
-     *                 type="array",
-     *                 @OA\Items(
-     *                     @OA\Property(property="word", type="string", example="extraordinary"),
-     *                     @OA\Property(property="player_id", type="string", example="8f7d9c2e"),
-     *                     @OA\Property(property="length", type="integer", example=13),
-     *                     @OA\Property(property="submitted_at", type="string", format="date-time"),
-     *                     @OA\Property(property="session_id", type="string", example="sess_123abc")
-     *                 )
-     *             )
-     *         )
-     *     )
-     * )
+     * Get the top longest words.
+     * This endpoint is for internal use only and requires CSRF token.
      */
     public function topWords(): JsonResponse
     {

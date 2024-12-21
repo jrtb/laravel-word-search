@@ -66,14 +66,14 @@ class PlaySessionController extends Controller
      * @OA\Post(
      *     path="/api/v1/play-session/submit-word",
      *     operationId="submitWord",
-     *     summary="Submit a word",
-     *     description="Submit a word found in the current play session.",
+     *     summary="Submit a word to the current play session",
+     *     description="Submit a word found in the current play session. Creates a new session if needed. Validates word against current session's omnigram.",
      *     tags={"Play Sessions"},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
      *             required={"word"},
-     *             @OA\Property(property="word", type="string", example="STAR")
+     *             @OA\Property(property="word", type="string", example="STAR", description="The word to submit")
      *         )
      *     ),
      *     @OA\Response(
@@ -81,7 +81,7 @@ class PlaySessionController extends Controller
      *         description="Word submission result",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=true),
-     *             @OA\Property(property="word", type="string", example="STAR")
+     *             @OA\Property(property="word", type="string", example="STAR", description="The submitted word if valid")
      *         )
      *     ),
      *     @OA\Response(

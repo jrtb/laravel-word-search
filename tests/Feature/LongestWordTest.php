@@ -81,7 +81,9 @@ class LongestWordTest extends TestCase
 
     public function test_top_words_returns_json_response(): void
     {
-        $response = $this->getJson('/api/v1/longest-word/top');
+        $response = $this->withSession(['_token' => 'test-token'])
+            ->withHeader('X-CSRF-TOKEN', 'test-token')
+            ->get('/longest-word/top');
         
         $response
             ->assertStatus(200)

@@ -26,6 +26,12 @@ Please consider the following context when providing assistance:
    - Word search puzzle functionality
    - Pattern-based word searching
    - Frequency-based word analysis
+   - Play session management:
+     - Get current session status and puzzle
+     - Submit and validate words against puzzle
+     - Track words found in current session
+     - 24-hour session duration
+     - Automatic session creation/renewal
    - Longest word tracking system:
      - Browser fingerprint-based player identification
      - Individual longest word records per player

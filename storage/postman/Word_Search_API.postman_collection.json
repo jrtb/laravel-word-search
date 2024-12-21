@@ -61,12 +61,56 @@
 						},
 						"description": "Search for words based on their frequency of usage."
 					}
+				},
+				{
+					"name": "Get Top Longest Words",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-CSRF-TOKEN",
+								"value": "{{csrf_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/longest-word/top",
+							"host": ["{{baseUrl}}"],
+							"path": ["longest-word", "top"]
+						},
+						"description": "Get the top 10 longest words submitted by all players. This endpoint is for internal use only and requires CSRF token protection."
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/longest-word/top"
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"success\": true,\n    \"words\": [\n        {\n            \"word\": \"extraordinary\",\n            \"player_id\": \"8f7d9c2e\",\n            \"length\": 13,\n            \"submitted_at\": \"2024-03-20T00:00:00Z\",\n            \"session_id\": \"sess_123abc\"\n        }\n    ]\n}"
+						}
+					]
 				}
 			]
 		},
 		{
 			"name": "Play Sessions",
-			"description": "Endpoints for managing 24-hour play sessions and word submissions.",
+			"description": "Endpoints for managing 24-hour play sessions and word submissions. Each session includes an omnigram puzzle and tracks words found by the player.",
 			"item": [
 				{
 					"name": "Get Current Session",
@@ -89,7 +133,7 @@
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "v1", "play-session", "current"]
 						},
-						"description": "Get the current play session for the player, creating a new one if needed. Sessions last 24 hours."
+						"description": "Get the current play session for the player, creating a new one if needed. Sessions last 24 hours from creation. Returns the current omnigram puzzle and any words found so far."
 					},
 					"response": [
 						{
@@ -143,7 +187,7 @@
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "v1", "play-session", "submit-word"]
 						},
-						"description": "Submit a word found in the current play session."
+						"description": "Submit a word found in the current play session. The word must be formed from letters in the current session's omnigram. Creates a new session if needed."
 					},
 					"response": [
 						{
@@ -169,6 +213,30 @@
 								}
 							],
 							"body": "{\n    \"success\": true,\n    \"word\": \"STAR\"\n}"
+						},
+						{
+							"name": "Validation Error",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"word\": \"\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/v1/play-session/submit-word"
+								}
+							},
+							"status": "Unprocessable Entity",
+							"code": 422,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": "{\n    \"success\": false,\n    \"error\": \"The word field is required\"\n}"
 						}
 					]
 				},
@@ -193,7 +261,7 @@
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "v1", "play-session", "top-scores"]
 						},
-						"description": "Get the top word counts from completed play sessions, ordered by number of words found."
+						"description": "Get the top word counts from completed play sessions, ordered by number of words found. Shows the best performing players and their scores."
 					},
 					"response": [
 						{

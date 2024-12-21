@@ -355,7 +355,11 @@
         function fetchTopWords() {
             const topWordsBody = document.getElementById('topWords');
             
-            fetch('/api/v1/longest-word/top')
+            fetch('/longest-word/top', {
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            })
                 .then(response => response.json())
                 .then(data => {
                     if (!data.success) {
