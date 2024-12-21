@@ -209,3 +209,27 @@ When handling errors:
 - Consider both development and production environments
 - Follow Laravel 11's error handling patterns
 - Implement proper loading states and fallbacks
+
+API Endpoints:
+
+1. Internal APIs (Protected by CSRF Token)
+   
+   a. Play Session Management
+      - GET /api/v1/play-session/current
+        Returns current session info including:
+        - Session ID
+        - Omnigram puzzle
+        - Time remaining
+        - Found words
+        - Player's longest word and length
+      
+      - POST /api/v1/play-session/submit-word
+        Submit a word found in the current session
+   
+   b. Pattern Search
+      - POST /search
+        Search through word lists using pattern matching
+   
+   c. Frequency Search
+      - POST /search-frequency
+        Find words based on usage frequency

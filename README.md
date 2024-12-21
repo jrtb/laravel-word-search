@@ -17,12 +17,6 @@ A specialized web application for searching and analyzing words based on pattern
   - Returns up to 200 matching words
   - Shows total count of matches found
 
-- **Longest Word API**: Track the longest word found by each player
-  - Cross-domain support for multi-subdomain deployments
-  - Browser fingerprint-based player identification
-  - RESTful endpoints for submitting and retrieving longest words
-  - Player identity persistence across sessions
-
 - **Session Tracking**: Track player activity with 24-hour sessions
   - Automatic session management based on activity
   - Sessions remain active for 24 hours from last activity
@@ -80,7 +74,9 @@ A specialized web application for searching and analyzing words based on pattern
            {
                "word": "STAR"
            }
-       ]
+       ],
+       "longest_word": "EXTRAORDINARY",
+       "longest_word_length": 13
    }
    ```
    - `session_id`: Unique identifier for the current play session
@@ -88,6 +84,8 @@ A specialized web application for searching and analyzing words based on pattern
    - `started_at`: When the session started (ISO 8601 format)
    - `time_remaining`: Seconds remaining in the current session
    - `words`: Array of words found in this session
+   - `longest_word`: Player's longest word found so far (empty string if none)
+   - `longest_word_length`: Length of player's longest word (0 if none)
    - Note: Creates a new session if none exists or if previous session expired
 
 - **Submit Word to Play Session**
@@ -184,76 +182,7 @@ Note: These internal APIs use Laravel 11's web middleware group which includes C
 
 These endpoints are publicly accessible and explicitly exclude CSRF token requirements through Laravel 11's API middleware configuration:
 
-1. **Submit a Word**
-   ```http
-   POST /api/v1/longest-word
-   Content-Type: application/json
-
-   {
-       "word": "extraordinary"
-   }
-   ```
-   
-   **Response**
-   ```json
-   {
-       "success": true,
-       "is_longest": true,
-       "submitted_word": "extraordinary",
-       "player_id": "8f7d9c2e"
-   }
-   ```
-   - `is_longest`: Indicates if the submitted word became the new longest word
-   - `submitted_word`: The word that was submitted
-   - `player_id`: SHA-256 hash of browser fingerprint
-   - Note: Words are tracked per player, with identity maintained across sessions
-   - Sessions remain active for 24 hours from last activity
-   - New sessions are created after 24 hours of inactivity
-
-2. **Get Current Longest Word**
-   ```http
-   GET /api/v1/longest-word
-   ```
-   
-   **Response**
-   ```json
-   {
-       "success": true,
-       "longest_word": "extraordinary",
-       "length": 13,
-       "player_id": "8f7d9c2e"
-   }
-   ```
-   - `longest_word`: The longest word found by this player (null if no words submitted)
-   - `length`: The length of the longest word (0 if no words submitted)
-   - `player_id`: SHA-256 hash of browser fingerprint
-   - Note: Results are player-specific, with identity maintained across sessions
-
-3. **Get Top 10 Longest Words**
-   ```http
-   GET /api/v1/longest-word/top
-   ```
-   
-   **Response**
-   ```json
-   {
-       "success": true,
-       "words": [
-           {
-               "word": "supercalifragilistic",
-               "player_id": "8f7d9c2e",
-               "length": 20,
-               "submitted_at": "2024-03-15T10:30:00Z"
-           }
-       ]
-   }
-   ```
-   - `words`: Array of longest words across all players, ordered by length
-   - `player_id`: SHA-256 hash of submitter's browser fingerprint
-   - `length`: Word length
-   - `submitted_at`: Timestamp of submission
-
-4. **Record Player Session**
+1. **Record Player Session**
    ```http
    POST /api/v1/session
    ```
@@ -272,7 +201,7 @@ These endpoints are publicly accessible and explicitly exclude CSRF token requir
    - `last_session_date`: Date of the most recent session
    - Note: Multiple sessions in the same day count as one day for streak purposes
 
-5. **Get Player Streak Info**
+2. **Get Player Streak Info**
    ```http
    GET /api/v1/session/streak
    ```
@@ -290,50 +219,7 @@ These endpoints are publicly accessible and explicitly exclude CSRF token requir
    - `highest_streak`: Highest streak ever achieved
    - `last_session_date`: Date of the last recorded session
 
-4. **Get Player's Highest Word Count**
-   ```http
-   GET /api/v1/game-words/highest
-   ```
-   
-   **Response**
-   ```json
-   {
-       "success": true,
-       "highest_word_count": 42,
-       "player_id": "8f7d9c2e"
-   }
-   ```
-   - `highest_word_count`: The highest number of words found in a single game (0 if no games played)
-   - `player_id`: SHA-256 hash of browser fingerprint
-   - Note: Results are player-specific, with identity maintained across sessions
-
-5. **Update Game Word Count**
-   ```http
-   POST /api/v1/game-words/update
-   Content-Type: application/json
-
-   {
-       "word_count": 15
-   }
-   ```
-   
-   **Response**
-   ```json
-   {
-       "success": true,
-       "word_count": 15,
-       "highest_word_count": 42,
-       "is_new_record": false,
-       "player_id": "8f7d9c2e"
-   }
-   ```
-   - `word_count`: The number of words found in the current game
-   - `highest_word_count`: Player's highest word count across all games
-   - `is_new_record`: Whether this submission set a new record
-   - `player_id`: SHA-256 hash of browser fingerprint
-   - Note: Automatically updates highest count if current count exceeds it
-
-6. **Get Current Play Session**
+3. **Get Current Play Session**
    ```http
    GET /api/v1/play-session/current
    ```
@@ -350,7 +236,9 @@ These endpoints are publicly accessible and explicitly exclude CSRF token requir
            {
                "word": "STAR"
            }
-       ]
+       ],
+       "longest_word": "EXTRAORDINARY",
+       "longest_word_length": 13
    }
    ```
    - `session_id`: Unique identifier for the current play session
@@ -358,9 +246,11 @@ These endpoints are publicly accessible and explicitly exclude CSRF token requir
    - `started_at`: When the session started (ISO 8601 format)
    - `time_remaining`: Seconds remaining in the current session
    - `words`: Array of words found in this session
+   - `longest_word`: Player's longest word found so far (empty string if none)
+   - `longest_word_length`: Length of player's longest word (0 if none)
    - Note: Creates a new session if none exists or if previous session expired
 
-7. **Submit Word to Play Session**
+4. **Submit Word to Play Session**
    ```http
    POST /api/v1/play-session/submit-word
    Content-Type: application/json

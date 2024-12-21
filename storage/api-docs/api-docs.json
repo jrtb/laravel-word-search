@@ -23,17 +23,17 @@
         }
     ],
     "paths": {
-        "/api/v1/game-words/highest": {
+        "/api/v1/play-session/current": {
             "get": {
                 "tags": [
-                    "Game Word Records"
+                    "Play Sessions"
                 ],
-                "summary": "Get player's highest word count",
-                "description": "Returns the highest number of words found in a single game for the current player",
-                "operationId": "6ab407543dd5cd115199612689a13073",
+                "summary": "Get current play session",
+                "description": "Get the current play session for the player, creating a new one if needed. Sessions last 24 hours from creation.",
+                "operationId": "getCurrentSession",
                 "responses": {
                     "200": {
-                        "description": "Successful operation",
+                        "description": "Current play session information",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -42,186 +42,72 @@
                                             "type": "boolean",
                                             "example": true
                                         },
-                                        "highest_word_count": {
+                                        "session_id": {
                                             "type": "integer",
-                                            "example": 42
+                                            "example": 1
                                         },
-                                        "player_id": {
-                                            "description": "SHA-256 hash of browser fingerprint",
+                                        "omnigram": {
                                             "type": "string",
-                                            "example": "8f7d9c2e"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "429": {
-                        "description": "Too many requests - rate limit exceeded (60 per minute)"
-                    }
-                }
-            }
-        },
-        "/api/v1/game-words/update": {
-            "post": {
-                "tags": [
-                    "Game Word Records"
-                ],
-                "summary": "Update game word count",
-                "description": "Updates the word count for the current game and updates the highest count if exceeded",
-                "operationId": "fa25ba1a3a32ef145318fdab8fc32663",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "word_count"
-                                ],
-                                "properties": {
-                                    "word_count": {
-                                        "description": "Number of words found in the current game",
-                                        "type": "integer",
-                                        "example": 15
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
+                                            "example": "STARLIGHT"
                                         },
-                                        "word_count": {
-                                            "type": "integer",
-                                            "example": 15
-                                        },
-                                        "highest_word_count": {
-                                            "type": "integer",
-                                            "example": 42
-                                        },
-                                        "is_new_record": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "player_id": {
-                                            "description": "SHA-256 hash of browser fingerprint",
+                                        "started_at": {
                                             "type": "string",
-                                            "example": "8f7d9c2e"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
+                                            "format": "date-time"
                                         },
-                                        "errors": {
-                                            "properties": {
-                                                "word_count": {
-                                                    "type": "array",
-                                                    "items": {
+                                        "time_remaining": {
+                                            "type": "integer",
+                                            "description": "Seconds remaining in session"
+                                        },
+                                        "words": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "word": {
                                                         "type": "string",
-                                                        "example": "The word count field is required."
+                                                        "example": "STAR"
                                                     }
                                                 }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "429": {
-                        "description": "Too many requests - rate limit exceeded (60 per minute)"
-                    }
-                }
-            }
-        },
-        "/api/v1/longest-word": {
-            "get": {
-                "tags": [
-                    "Longest Word"
-                ],
-                "summary": "Get current player's longest word",
-                "description": "Retrieves the longest word submitted by the current player. Player identity is maintained across sessions using browser fingerprinting.",
-                "operationId": "getLongestWord",
-                "responses": {
-                    "200": {
-                        "description": "Current longest word information",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
+                                            }
                                         },
                                         "longest_word": {
                                             "type": "string",
-                                            "example": "extraordinary",
-                                            "nullable": true
+                                            "example": "EXTRAORDINARY",
+                                            "description": "Player's longest word found so far"
                                         },
-                                        "length": {
+                                        "longest_word_length": {
                                             "type": "integer",
-                                            "example": 13
-                                        },
-                                        "player_id": {
-                                            "type": "string",
-                                            "example": "8f7d9c2e"
+                                            "example": 13,
+                                            "description": "Length of player's longest word"
                                         }
-                                    },
-                                    "type": "object"
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            },
+            }
+        },
+        "/api/v1/play-session/submit-word": {
             "post": {
                 "tags": [
-                    "Longest Word"
+                    "Play Sessions"
                 ],
-                "summary": "Submit a new word",
-                "description": "Attempts to store a word if it's longer than the current longest word for the player. Player identity is maintained across sessions using browser fingerprinting (User-Agent, Accept-Language headers, and IP address).",
-                "operationId": "storeLongestWord",
+                "summary": "Submit a word to the current play session",
+                "description": "Submit a word found in the current play session. Creates a new session if needed. Validates word against current session's omnigram.",
+                "operationId": "submitWord",
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [
-                                    "word"
-                                ],
+                                "required": ["word"],
                                 "properties": {
                                     "word": {
-                                        "description": "The word to submit",
                                         "type": "string",
-                                        "example": "extraordinary"
+                                        "example": "STAR",
+                                        "description": "The word to submit"
                                     }
-                                },
-                                "type": "object"
+                                }
                             }
                         }
                     }
@@ -237,261 +123,18 @@
                                             "type": "boolean",
                                             "example": true
                                         },
-                                        "is_longest": {
-                                            "description": "Whether this word became the player's new longest word",
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "submitted_word": {
-                                            "description": "The word that was submitted",
+                                        "word": {
                                             "type": "string",
-                                            "example": "extraordinary"
-                                        },
-                                        "player_id": {
-                                            "description": "SHA-256 hash of the player's browser fingerprint",
-                                            "type": "string",
-                                            "example": "8f7d9c2e"
+                                            "example": "STAR",
+                                            "description": "The submitted word if valid"
                                         }
-                                    },
-                                    "type": "object"
+                                    }
                                 }
                             }
                         }
                     },
                     "422": {
-                        "description": "Validation error - empty or invalid word"
-                    }
-                }
-            }
-        },
-        "/api/v1/longest-word/top": {
-            "get": {
-                "tags": [
-                    "Longest Word"
-                ],
-                "summary": "Get top 10 longest words",
-                "description": "Retrieves the top 10 longest words submitted by all players, ordered by word length. Each word includes the submitter's player ID (SHA-256 hash of their browser fingerprint), which remains consistent across their sessions.",
-                "operationId": "getTopLongestWords",
-                "responses": {
-                    "200": {
-                        "description": "Top 10 longest words",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "words": {
-                                            "type": "array",
-                                            "items": {
-                                                "properties": {
-                                                    "word": {
-                                                        "description": "The submitted word",
-                                                        "type": "string",
-                                                        "example": "supercalifragilistic"
-                                                    },
-                                                    "player_id": {
-                                                        "description": "SHA-256 hash of the player's browser fingerprint",
-                                                        "type": "string",
-                                                        "example": "8f7d9c2e"
-                                                    },
-                                                    "length": {
-                                                        "description": "Length of the word",
-                                                        "type": "integer",
-                                                        "example": 20
-                                                    },
-                                                    "submitted_at": {
-                                                        "description": "When the word was submitted",
-                                                        "type": "string",
-                                                        "format": "date-time",
-                                                        "example": "2024-03-15T10:30:00Z"
-                                                    }
-                                                },
-                                                "type": "object"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/session": {
-            "post": {
-                "tags": [
-                    "Player Session"
-                ],
-                "summary": "Record a player session",
-                "description": "Records that a player has started a game session. Used for tracking daily streaks.",
-                "operationId": "recordSession",
-                "responses": {
-                    "200": {
-                        "description": "Session recorded successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "current_streak": {
-                                            "type": "integer",
-                                            "example": 3
-                                        },
-                                        "highest_streak": {
-                                            "type": "integer",
-                                            "example": 5
-                                        },
-                                        "last_session_date": {
-                                            "type": "string",
-                                            "format": "date",
-                                            "example": "2024-03-19"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/session/streak": {
-            "get": {
-                "tags": [
-                    "Player Session"
-                ],
-                "summary": "Get player's streak information",
-                "description": "Retrieves the current and highest streak information for the player based on daily game sessions.",
-                "operationId": "getSessionStreak",
-                "responses": {
-                    "200": {
-                        "description": "Player's streak information",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "current_streak": {
-                                            "type": "integer",
-                                            "example": 3
-                                        },
-                                        "highest_streak": {
-                                            "type": "integer",
-                                            "example": 5
-                                        },
-                                        "last_session_date": {
-                                            "type": "string",
-                                            "format": "date",
-                                            "example": "2024-03-19"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/": {
-            "get": {
-                "tags": [
-                    "Word Search"
-                ],
-                "summary": "Display the word search interface",
-                "operationId": "59f0741d68535f9065795aab9930413a",
-                "responses": {
-                    "200": {
-                        "description": "Word search view"
-                    }
-                }
-            }
-        },
-        "/search": {
-            "post": {
-                "tags": [
-                    "Word Search"
-                ],
-                "summary": "Search for words based on pattern",
-                "description": "Search through specialized word lists based on a query pattern. Protected by CSRF token.",
-                "operationId": "8896c7f75118ec3ac626e94b58fcf295",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "query",
-                                    "list"
-                                ],
-                                "properties": {
-                                    "query": {
-                                        "description": "The search pattern",
-                                        "type": "string",
-                                        "example": "example"
-                                    },
-                                    "list": {
-                                        "description": "Which list to search in",
-                                        "type": "string",
-                                        "enum": [
-                                            "omnigrams",
-                                            "wordchecker",
-                                            "both"
-                                        ],
-                                        "example": "both"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Search results",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "results": {
-                                            "properties": {
-                                                "omnigrams": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string"
-                                                    }
-                                                },
-                                                "wordchecker": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string"
-                                                    }
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
+                        "description": "Invalid request - word parameter missing or invalid",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -501,141 +144,16 @@
                                             "example": false
                                         },
                                         "error": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "example": "The word field is required"
                                         }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "csrf": []
-                    }
-                ]
-            }
-        },
-        "/search-frequency": {
-            "post": {
-                "tags": [
-                    "Word Search"
-                ],
-                "summary": "Search for words based on frequency",
-                "description": "Search for words that meet or exceed a specified frequency threshold. Protected by CSRF token.",
-                "operationId": "08a95d20d9a10a056460690268b92cff",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "frequency"
-                                ],
-                                "properties": {
-                                    "frequency": {
-                                        "description": "Minimum frequency threshold",
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 9.0e-7
                                     }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Search results",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "total_count": {
-                                            "type": "integer",
-                                            "example": 150
-                                        },
-                                        "words": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "error": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "type": "object"
                                 }
                             }
                         }
                     }
-                },
-                "security": [
-                    {
-                        "csrf": []
-                    }
-                ]
+                }
             }
         }
-    },
-    "components": {
-        "securitySchemes": {
-            "csrf": {
-                "type": "apiKey",
-                "description": "CSRF token required for internal API endpoints",
-                "name": "X-CSRF-TOKEN",
-                "in": "header"
-            }
-        }
-    },
-    "tags": [
-        {
-            "name": "Game Word Records",
-            "description": "API endpoints for managing game word count records"
-        },
-        {
-            "name": "Longest Word",
-            "description": "External API endpoints for tracking longest words found by players. Players are identified using request fingerprinting based on User-Agent, Accept-Language headers, and IP address for consistent identity across sessions."
-        },
-        {
-            "name": "Player Session",
-            "description": "Endpoints for tracking player sessions and streaks. Sessions are recorded when players load the game."
-        },
-        {
-            "name": "Word Search",
-            "description": "Internal API endpoints for word searching functionality"
-        }
-    ],
-    "externalDocs": {
-        "description": "Find more info in README",
-        "url": "https://github.com/yourusername/laravel-word-search"
-    },
-    "security": [
-        {
-            "csrf": []
-        }
-    ]
+    }
 }

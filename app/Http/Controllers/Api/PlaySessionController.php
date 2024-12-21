@@ -46,7 +46,9 @@ class PlaySessionController extends Controller
      *             @OA\Property(property="time_remaining", type="integer", description="Seconds remaining in session"),
      *             @OA\Property(property="words", type="array", @OA\Items(
      *                 @OA\Property(property="word", type="string", example="STAR")
-     *             ))
+     *             )),
+     *             @OA\Property(property="longest_word", type="string", example="EXTRAORDINARY", description="Player's longest word found so far"),
+     *             @OA\Property(property="longest_word_length", type="integer", example=13, description="Length of player's longest word")
      *         )
      *     )
      * )

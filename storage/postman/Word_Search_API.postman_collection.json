@@ -1,148 +1,36 @@
 {
 	"info": {
-		"_postman_id": "7e9c2f3a-5b4d-4c1a-8f3e-1d2e3f4a5b6c",
+		"_postman_id": "your-postman-id",
 		"name": "Word Search API",
-		"description": "API collection for the Laravel Word Search application. This collection includes endpoints for pattern search, frequency search, and word tracking within 24-hour sessions.",
+		"description": "Collection for Laravel Word Search API endpoints",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
-			"name": "Internal APIs",
-			"description": "APIs for internal website use only. Protected by CSRF tokens.",
-			"item": [
-				{
-					"name": "Pattern Search",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "X-CSRF-TOKEN",
-								"value": "{{csrf_token}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"query\": \"example\",\n    \"list\": \"both\"\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/search",
-							"host": ["{{baseUrl}}"],
-							"path": ["search"]
-						},
-						"description": "Search through word lists using pattern matching."
-					}
-				},
-				{
-					"name": "Frequency Search",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "X-CSRF-TOKEN",
-								"value": "{{csrf_token}}"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"frequency\": 0.0000009\n}"
-						},
-						"url": {
-							"raw": "{{baseUrl}}/search-frequency",
-							"host": ["{{baseUrl}}"],
-							"path": ["search-frequency"]
-						},
-						"description": "Search for words based on their frequency of usage."
-					}
-				},
-				{
-					"name": "Get Top Longest Words",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "X-CSRF-TOKEN",
-								"value": "{{csrf_token}}"
-							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/longest-word/top",
-							"host": ["{{baseUrl}}"],
-							"path": ["longest-word", "top"]
-						},
-						"description": "Get the top 10 longest words submitted by all players. This endpoint is for internal use only and requires CSRF token protection."
-					},
-					"response": [
-						{
-							"name": "Success Response",
-							"originalRequest": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "{{baseUrl}}/longest-word/top"
-								}
-							},
-							"status": "OK",
-							"code": 200,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								}
-							],
-							"body": "{\n    \"success\": true,\n    \"words\": [\n        {\n            \"word\": \"extraordinary\",\n            \"player_id\": \"8f7d9c2e\",\n            \"length\": 13,\n            \"submitted_at\": \"2024-03-20T00:00:00Z\",\n            \"session_id\": \"sess_123abc\"\n        }\n    ]\n}"
-						}
-					]
-				}
-			]
-		},
-		{
 			"name": "Play Sessions",
-			"description": "Endpoints for managing 24-hour play sessions and word submissions. Each session includes an omnigram puzzle and tracks words found by the player.",
+			"description": "Endpoints for managing play sessions",
 			"item": [
 				{
 					"name": "Get Current Session",
 					"request": {
 						"method": "GET",
-						"header": [
-							{
-								"key": "User-Agent",
-								"value": "PostmanRuntime/7.32.3",
-								"description": "Used for player identification"
-							},
-							{
-								"key": "Accept-Language",
-								"value": "en-US",
-								"description": "Used for player identification"
-							}
-						],
+						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/play-session/current",
-							"host": ["{{baseUrl}}"],
+							"raw": "{{base_url}}/api/v1/play-session/current",
+							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "play-session", "current"]
-						},
-						"description": "Get the current play session for the player, creating a new one if needed. Sessions last 24 hours from creation. Returns the current omnigram puzzle and any words found so far."
+						}
 					},
 					"response": [
 						{
-							"name": "Success Response",
+							"name": "Success",
 							"originalRequest": {
 								"method": "GET",
 								"header": [],
 								"url": {
-									"raw": "{{baseUrl}}/api/v1/play-session/current"
+									"raw": "{{base_url}}/api/v1/play-session/current",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "play-session", "current"]
 								}
 							},
 							"status": "OK",
@@ -154,7 +42,20 @@
 									"value": "application/json"
 								}
 							],
-							"body": "{\n    \"success\": true,\n    \"session_id\": 123,\n    \"omnigram\": \"STARLIGHT\",\n    \"started_at\": \"2024-03-20T00:00:00Z\",\n    \"time_remaining\": 43200,\n    \"words\": [\n        {\n            \"word\": \"STAR\"\n        }\n    ]\n}"
+							"body": {
+								"success": true,
+								"session_id": 1,
+								"omnigram": "STARLIGHT",
+								"started_at": "2024-03-20T10:00:00Z",
+								"time_remaining": 86400,
+								"words": [
+									{
+										"word": "STAR"
+									}
+								],
+								"longest_word": "EXTRAORDINARY",
+								"longest_word_length": 13
+							}
 						}
 					]
 				},
@@ -166,16 +67,6 @@
 							{
 								"key": "Content-Type",
 								"value": "application/json"
-							},
-							{
-								"key": "User-Agent",
-								"value": "PostmanRuntime/7.32.3",
-								"description": "Used for player identification"
-							},
-							{
-								"key": "Accept-Language",
-								"value": "en-US",
-								"description": "Used for player identification"
 							}
 						],
 						"body": {
@@ -183,24 +74,30 @@
 							"raw": "{\n    \"word\": \"STAR\"\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/play-session/submit-word",
-							"host": ["{{baseUrl}}"],
+							"raw": "{{base_url}}/api/v1/play-session/submit-word",
+							"host": ["{{base_url}}"],
 							"path": ["api", "v1", "play-session", "submit-word"]
-						},
-						"description": "Submit a word found in the current play session. The word must be formed from letters in the current session's omnigram. Creates a new session if needed. Also checks and updates the player's longest word record."
+						}
 					},
 					"response": [
 						{
-							"name": "Success Response",
+							"name": "Success",
 							"originalRequest": {
 								"method": "POST",
-								"header": [],
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
 								"body": {
 									"mode": "raw",
 									"raw": "{\n    \"word\": \"STAR\"\n}"
 								},
 								"url": {
-									"raw": "{{baseUrl}}/api/v1/play-session/submit-word"
+									"raw": "{{base_url}}/api/v1/play-session/submit-word",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "play-session", "submit-word"]
 								}
 							},
 							"status": "OK",
@@ -212,19 +109,29 @@
 									"value": "application/json"
 								}
 							],
-							"body": "{\n    \"success\": true,\n    \"word\": \"STAR\",\n    \"is_longest\": true,\n    \"longest_word\": \"STAR\",\n    \"longest_word_length\": 4\n}"
+							"body": {
+								"success": true,
+								"word": "STAR"
+							}
 						},
 						{
-							"name": "Validation Error",
+							"name": "Invalid Request",
 							"originalRequest": {
 								"method": "POST",
-								"header": [],
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n    \"word\": \"\"\n}"
+									"raw": "{}"
 								},
 								"url": {
-									"raw": "{{baseUrl}}/api/v1/play-session/submit-word"
+									"raw": "{{base_url}}/api/v1/play-session/submit-word",
+									"host": ["{{base_url}}"],
+									"path": ["api", "v1", "play-session", "submit-word"]
 								}
 							},
 							"status": "Unprocessable Entity",
@@ -236,53 +143,10 @@
 									"value": "application/json"
 								}
 							],
-							"body": "{\n    \"success\": false,\n    \"error\": \"The word field is required\"\n}"
-						}
-					]
-				},
-				{
-					"name": "Get Top Word Counts",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "User-Agent",
-								"value": "PostmanRuntime/7.32.3",
-								"description": "Used for player identification"
-							},
-							{
-								"key": "Accept-Language",
-								"value": "en-US",
-								"description": "Used for player identification"
+							"body": {
+								"success": false,
+								"error": "The word field is required"
 							}
-						],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/play-session/top-scores",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "v1", "play-session", "top-scores"]
-						},
-						"description": "Get the top word counts from completed play sessions, ordered by number of words found. Shows the best performing players and their scores."
-					},
-					"response": [
-						{
-							"name": "Success Response",
-							"originalRequest": {
-								"method": "GET",
-								"header": [],
-								"url": {
-									"raw": "{{baseUrl}}/api/v1/play-session/top-scores"
-								}
-							},
-							"status": "OK",
-							"code": 200,
-							"_postman_previewlanguage": "json",
-							"header": [
-								{
-									"key": "Content-Type",
-									"value": "application/json"
-								}
-							],
-							"body": "{\n    \"success\": true,\n    \"scores\": [\n        {\n            \"player_id\": \"8f7d9c2e\",\n            \"word_count\": 42,\n            \"date\": \"2024-03-15\"\n        }\n    ]\n}"
 						}
 					]
 				}
@@ -291,7 +155,7 @@
 	],
 	"variable": [
 		{
-			"key": "baseUrl",
+			"key": "base_url",
 			"value": "http://localhost:8000",
 			"type": "string"
 		}

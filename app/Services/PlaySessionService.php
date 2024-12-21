@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\PlaySession;
 use App\Models\PlaySessionWord;
+use App\Models\LongestWord;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
@@ -24,6 +25,10 @@ class PlaySessionService
             $session = $this->startNewSession($playerId);
         }
 
+        $longestWord = LongestWord::where('player_id', $playerId)
+            ->orderByRaw('LENGTH(word) DESC')
+            ->first();
+
         return [
             'session_id' => $session->id,
             'omnigram' => $session->omnigram,
@@ -32,6 +37,8 @@ class PlaySessionService
                 'word' => $word->word,
             ])->values(),
             'time_remaining' => $this->getTimeRemaining($session),
+            'longest_word' => $longestWord?->word ?? '',
+            'longest_word_length' => $longestWord ? strlen($longestWord->word) : 0,
         ];
     }
 
